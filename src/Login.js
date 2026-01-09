@@ -8,35 +8,39 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     try {
-      const res = await fetch(
-        process.env.REACT_APP_API_URL + "/api/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password: password.trim() }),
+      const base = (process.env.REACT_APP_API_URL || "").replace(/\/$/, "");
+
+      const res = await fetch(base + "/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = "Login failed";
+        try {
+          const err = JSON.parse(text);
+          msg = err.message || msg;
+        } catch {
+          msg = text || msg;
         }
-      );
-if (!res.ok) {
-  const text = await res.text();
-  let msg = "Login failed";
-  try {
-    const err = JSON.parse(text);
-    msg = err.message || msg;
-  } catch {
-    msg = text || msg;
-  }
-  setError(msg);
-  return;
-}
-;
+        setError(msg);
+        return;
       }
+
       const data = await res.json();
       localStorage.setItem("token", data.token);
       localStorage.setItem("username", data.username);
       localStorage.setItem("role", data.role);
       onLogin();
     } catch (err) {
+      console.error("Login error:", err);
       setError("Network error");
     }
   };
@@ -45,21 +49,25 @@ if (!res.ok) {
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
         <h2>Castle Consulting Messaging Login</h2>
+
         <input
           type="text"
           placeholder="Username"
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
         />
+
         {error && <div className="error">{error}</div>}
+
         <button type="submit">Login</button>
       </form>
     </div>
@@ -67,4 +75,3 @@ if (!res.ok) {
 }
 
 export default Login;
-
