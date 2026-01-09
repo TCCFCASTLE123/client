@@ -17,10 +17,19 @@ function Login({ onLogin }) {
         body: JSON.stringify({ username: username.trim(), password: password.trim() }),
         }
       );
-      if (!res.ok) {
-        const err = await res.json();
-        setError(err.message || "Login failed");
-        return;
+if (!res.ok) {
+  const text = await res.text();
+  let msg = "Login failed";
+  try {
+    const err = JSON.parse(text);
+    msg = err.message || msg;
+  } catch {
+    msg = text || msg;
+  }
+  setError(msg);
+  return;
+}
+;
       }
       const data = await res.json();
       localStorage.setItem("token", data.token);
