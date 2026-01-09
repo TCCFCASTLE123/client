@@ -10,7 +10,7 @@ function Login({ onLogin }) {
     setError("");
     try {
       const res = await fetch(
-        process.env.REACT_APP_API_URL + "/auth/login",
+        process.env.REACT_APP_API_URL + "/api/auth/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
