@@ -1,458 +1,435 @@
-/* Base reset */
-* {
-  box-sizing: border-box;
+/* =========================================================
+   Castle Consulting Messaging — Cleaner App.css
+   - Same layout, cleaner look
+   - Shorter + reusable styles for dropdowns/pills
+   ========================================================= */
+
+/* ---------- Design Tokens ---------- */
+:root {
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --panel-muted: #f6f8fa;
+
+  --text: #283645;
+  --muted: #6b7280;
+
+  --border: #e3e9ef;
+
+  --brand: #3051e4;
+  --brand-2: #324150;
+
+  --danger: #d14343;
+
+  --radius: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 24px rgba(50,65,80,0.12);
+
+  --focus: 0 0 0 3px rgba(48,81,228,0.18);
 }
-body, html, #root {
+
+/* ---------- Base Reset ---------- */
+* { box-sizing: border-box; }
+html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f7fa;
-  color: #283645;
-  overflow: auto;
+  background: var(--bg);
+  color: var(--text);
 }
 
-/* Header */
+/* ---------- Header ---------- */
 .app-header {
-  background: #324150;
-  color: white;
-  padding: 20px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  background: var(--brand-2);
+  color: #fff;
+  padding: 18px 0;
+  font-size: 1.4rem;
+  font-weight: 650;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(50,65,80,0.1);
+  box-shadow: 0 2px 8px rgba(50,65,80,0.10);
 }
 
-/* Container */
+/* ---------- Layout Container ---------- */
 .inbox-container {
   display: flex;
   height: calc(100% - 60px);
-  max-width: 900px;
-  margin: 20px auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(50,65,80,0.1);
+  max-width: 980px;
+  margin: 18px auto;
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
+  border: 1px solid rgba(227, 233, 239, 0.8);
 }
 
-/* Sidebar */
+/* =========================================================
+   Sidebar
+   ========================================================= */
 .inbox-sidebar {
-  width: 240px;
-  background: #f6f8fa;
-  padding: 24px 20px;
-  border-right: 1px solid #e0e6ed;
+  width: 260px;
+  background: var(--panel-muted);
+  padding: 18px 16px;
+  border-right: 1px solid var(--border);
   overflow-y: auto;
 }
 
 .inbox-sidebar h3 {
-  margin-bottom: 20px;
-  font-weight: 700;
-  font-size: 18px;
-  color: #324150;
+  margin: 0 0 14px;
+  font-weight: 750;
+  font-size: 16px;
+  color: var(--brand-2);
 }
 
+/* Primary sidebar button */
 .inbox-sidebar button {
   width: 100%;
-  padding: 10px 0;
-  margin-bottom: 20px;
-  background: #324150;
-  color: white;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: var(--brand-2);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 10px;
+  font-weight: 650;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.06s ease, opacity 0.15s ease, background 0.2s ease;
 }
-.inbox-sidebar button:hover {
-  background: #2a3744;
-}
+.inbox-sidebar button:hover { background: #2a3744; }
+.inbox-sidebar button:active { transform: translateY(1px); }
 
-.inbox-sidebar ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+/* Client list */
+.inbox-sidebar ul { list-style: none; padding: 0; margin: 0; }
 
 .inbox-sidebar li {
-  background: white;
-  padding: 12px 16px;
+  background: var(--panel);
+  padding: 12px 12px;
   margin-bottom: 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  color: #324150;
-  font-size: 14px;
+  transition: background 0.15s ease, border 0.15s ease, transform 0.06s ease;
+  border: 1px solid rgba(227,233,239,0.9);
+  box-shadow: var(--shadow-sm);
+  color: var(--brand-2);
+  font-size: 13px;
   line-height: 1.2;
 }
-.inbox-sidebar li:hover, .inbox-sidebar li.selected {
-  background: #324150;
-  color: white;
+.inbox-sidebar li:hover { transform: translateY(-1px); }
+
+/* Selected state (cleaner than full dark) */
+.inbox-sidebar li.selected {
+  border-color: rgba(48,81,228,0.35);
+  box-shadow: 0 6px 18px rgba(48,81,228,0.10);
+  background: rgba(48,81,228,0.06);
 }
 
-/* Sidebar client details */
+/* Name + subline */
 .inbox-sidebar li strong {
-  font-weight: 700;
+  font-weight: 750;
   display: block;
   margin-bottom: 4px;
+  color: var(--text);
 }
 
 .inbox-sidebar li span {
-  font-style: italic;
+  font-style: normal;
   font-size: 12px;
-  opacity: 0.7;
+  color: var(--muted);
+  opacity: 0.9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
 }
 
-/* Main chat area */
+/* =========================================================
+   Main Chat Area
+   ========================================================= */
 .inbox-main {
   flex: 1;
-  padding: 30px 24px;
+  padding: 22px 20px;
   display: flex;
   flex-direction: column;
   background: #f9fbfd;
 }
 
-/* Header and buttons */
+/* Header row */
 .inbox-main-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
 .inbox-main-header h2 {
-  font-weight: 700;
-  font-size: 24px;
-  color: #283645;
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--text);
   margin: 0;
 }
 
+/* Action buttons */
 .inbox-main-header button {
-  font-weight: 600;
-  padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: none;
+  font-weight: 650;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-radius: 10px;
+  border: 1px solid transparent;
   cursor: pointer;
-  margin-left: 10px;
+  transition: transform 0.06s ease, opacity 0.15s ease;
 }
+.inbox-main-header button:active { transform: translateY(1px); }
 
 .inbox-main-header button.edit-btn {
   background: #6b7280;
-  color: white;
+  color: #fff;
 }
-
-.inbox-main-header button.edit-btn:hover {
-  background: #52575c;
-}
+.inbox-main-header button.edit-btn:hover { opacity: 0.92; }
 
 .inbox-main-header button.delete-btn {
-  background: #d14343;
-  color: white;
+  background: var(--danger);
+  color: #fff;
 }
+.inbox-main-header button.delete-btn:hover { opacity: 0.92; }
 
-.inbox-main-header button.delete-btn:hover {
-  background: #a83232;
-}
-
-/* Messages container */
+/* =========================================================
+   Messages
+   ========================================================= */
 .messages {
-  background: white;
-  flex-grow: 1;
-  padding: 20px 30px;
-  border-radius: 12px;
-  box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+  background: var(--panel);
+  flex: 1;
+  padding: 18px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(227,233,239,0.9);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  user-select: text;
+  gap: 12px;
 }
 
 /* Message bubble */
 .message {
-  max-width: 60%;
-  padding: 12px 18px;
-  border-radius: 20px;
+  max-width: 68%;
+  padding: 12px 14px;
+  border-radius: 18px;
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.35;
   word-break: break-word;
   display: flex;
-  align-items: flex-end;
   gap: 10px;
+  align-items: flex-end;
 }
 
-/* Client message style */
+/* Incoming */
 .message.client {
-  background: #f0f4fa;
-  color: #333;
+  background: #f2f5fb;
+  color: #222;
   align-self: flex-start;
-  border-radius: 20px 20px 20px 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.07);
+  border-radius: 18px 18px 18px 8px;
+  border: 1px solid rgba(227,233,239,0.9);
 }
 
-/* Admin message style */
+/* Outgoing */
 .message.me {
-  background: #3051e4;
-  color: white;
+  background: var(--brand);
+  color: #fff;
   align-self: flex-end;
-  border-radius: 20px 20px 6px 20px;
-  box-shadow: 0 3px 8px rgba(48,81,228,0.6);
+  border-radius: 18px 18px 8px 18px;
+  box-shadow: 0 6px 18px rgba(48,81,228,0.25);
 }
 
-/* Avatar circle */
+/* Avatar */
 .message-avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: white;
-  border: 2px solid #e3e9ef;
-  color: #3051e4;
-  font-weight: 700;
-  font-size: 13px;
+  background: #fff;
+  border: 1px solid rgba(227,233,239,0.9);
+  color: var(--brand);
+  font-weight: 800;
+  font-size: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   user-select: none;
 }
 
-/* Message text */
-.message-text {
-  flex-grow: 1;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
+.message-text { flex: 1; white-space: pre-wrap; }
 
-/* Timestamp */
 .message-timestamp {
   font-size: 10px;
-  color: #888;
-  opacity: 0.7;
+  color: rgba(255,255,255,0.82);
+  opacity: 0.9;
   margin-top: 4px;
   user-select: none;
-  text-align: left;
 }
-.message.me .message-timestamp {
-  text-align: right;
-}
+.message.client .message-timestamp { color: rgba(107,114,128,0.85); }
 
-/* Input bar */
-.message-input-row {
-  display: flex;
-  padding: 16px 20px;
-  gap: 12px;
-  margin-top: 20px;
-  background: #f5f7fa;
-  border-radius: 0 0 12px 12px;
-}
-
-.message-input-row input[type="text"] {
-  flex-grow: 1;
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid #cbd5e1;
-  font-size: 15px;
-  outline: none;
-}
-
-.message-input-row input[type="text"]:focus {
-  border-color: #3051e4;
-  background: white;
-}
-
-.message-input-row button {
-  background: #3051e4;
-  color: white;
-  font-weight: 700;
-  font-size: 15px;
-  padding: 10px 24px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.message-input-row button:hover:not(:disabled) {
-  background: #2446c4;
-}
-
-.message-input-row button:disabled {
-  background: #bcc6dd;
-  cursor: not-allowed;
-}
-
-/* Scrollbar */
-.messages::-webkit-scrollbar {
-  width: 7px;
-}
-.messages::-webkit-scrollbar-track {
-  background: #f1f3f6;
-  border-radius: 4px;
-}
-.messages::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-.messages::-webkit-scrollbar-thumb:hover {
-  background: #a0b0d6;
-}
-
-/* Responsive */
-@media (max-width: 720px) {
-  .inbox-container {
-    flex-direction: column;
-    height: 100%;
-    max-width: 100vw;
-    margin: 20px 0 0 0;
-    border-radius: 0;
-  }
-  .inbox-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #e0e6ed;
-    padding: 16px 20px;
-  }
-  .inbox-main {
-    padding: 20px 16px;
-    height: calc(100vh - 180px);
-  }
-  .messages {
-    max-height: 280px;
-  }
-  .message-input-row {
-    padding: 14px 16px;
-    border-radius: 0;
-    margin-top: 10px;
-  }
-}  /* <-- This closes the @media block! */
-
-/* ===== Status Dropdown and Label Styles ===== */
-
-/* Style for the status dropdown */
-.status-dropdown {
-  padding: 2px 8px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #f6f8fa;
-  color: #324150;
-  font-size: 13px;
-  outline: none;
-  height: 28px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  max-width: 110px;
-  min-width: 80px;
-  transition: border 0.2s, background 0.2s;
-}
-
-.status-dropdown:focus {
-  border: 1.5px solid #3051e4;
-  background: #fff;
-}
-.status-dropdown:hover {
-  background: #e9eef8;
-}
-
-.inbox-sidebar .status-dropdown,
-.inbox-main .status-dropdown {
-  width: auto;
-  max-width: 110px;
-  min-width: 80px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-
-/* Status pill */
-.status-label {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #e0e6ed;
-  color: #3051e4;
-  margin-left: 4px;
-  border: none;
-}
-
-/* ======= Status Pill Colors ======= */
-.status-label[data-status="No Show"] {
-  background: #ffe066;        /* Yellow */
-  color: #a97b00;
-}
-.status-label[data-status="Set"] {
-  background: #fff;           /* White */
-  color: #283645;
-  border: 1px solid #e0e6ed;
-}
-.status-label[data-status="Attempted/Unsuccessful"] {
-  background: #8ee7f3;        /* Cyan */
-  color: #026579;
-}
-.status-label[data-status="Working To Set"] {
-  background: #e4d2fa;        /* Purple */
-  color: #7e39b5;
-}
-.status-label[data-status="Showed"] {
-  background: #e9ecef;        /* Light Gray */
-  color: #6c757d;
-}
-.status-label[data-status="Did Not Retain"] {
-  background: #ffc6a0;        /* Orange */
-  color: #b96a00;
-}
-.status-label[data-status="No Money"] {
-  background: #adb5bd;        /* Darker Gray */
-  color: #343a40;
-}
-.status-label[data-status="Retained"] {
-  background: #a3e6a1;        /* Green */
-  color: #22793d;
-}
-.status-label[data-status="Pending"] {
-  background: #fffacc;        /* Light Yellow */
-  color: #bca800;
-}
-.status-label[data-status="Can't Help"] {
-  background: #ffb4b4;        /* Red */
-  color: #c20d0d;
-}
-.status-label[data-status="Seen Can't Help"] {
-  background: #ffb4b4;        /* Red */
-  color: #c20d0d;
-}
+/* Date divider */
 .date-divider {
   text-align: center;
   font-size: 12px;
-  color: #aaa;
-  margin: 16px 0 6px 0;
-  font-weight: 500;
-  letter-spacing: 1px;
+  color: #98a2b3;
+  margin: 14px 0 6px;
+  font-weight: 650;
+  letter-spacing: 0.6px;
 }
 
-.timestamp {
-  font-size: 11px;
-  color: #888;
-  margin-top: 2px;
+/* =========================================================
+   Input Bar
+   ========================================================= */
+.message-input-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(246,248,250,0.9);
+  border: 1px solid rgba(227,233,239,0.9);
+  border-radius: var(--radius-lg);
 }
+
+.message-input-row input[type="text"] {
+  flex: 1;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(203,213,225,0.95);
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+}
+.message-input-row input[type="text"]:focus {
+  border-color: rgba(48,81,228,0.55);
+  box-shadow: var(--focus);
+}
+
+.message-input-row button {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 750;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.06s ease, opacity 0.15s ease;
+}
+.message-input-row button:hover:not(:disabled) { opacity: 0.92; }
+.message-input-row button:active { transform: translateY(1px); }
+.message-input-row button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* =========================================================
+   Reusable Form Controls (Status, Office, Case Type, etc.)
+   Use this class for ALL dropdowns to keep CSS short.
+   ========================================================= */
+.select,
+.status-dropdown {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(203,213,225,0.95);
+  background: #fff;
+  color: var(--brand-2);
+  font-size: 13px;
+  outline: none;
+  height: 32px;
+  transition: box-shadow 0.15s ease, border 0.15s ease, background 0.15s ease;
+}
+.select:focus,
+.status-dropdown:focus {
+  border-color: rgba(48,81,228,0.55);
+  box-shadow: var(--focus);
+}
+.select:hover,
+.status-dropdown:hover {
+  background: #fbfcff;
+}
+
+/* Pills */
+.pill,
+.status-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(227,233,239,0.95);
+  background: #eef2f7;
+  color: var(--brand);
+  white-space: nowrap;
+}
+
+/* Status colors (keep your existing mapping) */
+.status-label[data-status="No Show"] { background: #ffe066; color: #8b6500; border-color: rgba(139,101,0,0.15); }
+.status-label[data-status="Set"] { background: #fff; color: var(--text); }
+.status-label[data-status="Attempted/Unsuccessful"] { background: #8ee7f3; color: #026579; border-color: rgba(2,101,121,0.15); }
+.status-label[data-status="Working To Set"] { background: #e4d2fa; color: #6a2ea7; border-color: rgba(106,46,167,0.15); }
+.status-label[data-status="Showed"] { background: #e9ecef; color: #5f6368; }
+.status-label[data-status="Did Not Retain"] { background: #ffc6a0; color: #8a4b00; border-color: rgba(138,75,0,0.15); }
+.status-label[data-status="No Money"] { background: #adb5bd; color: #2f3437; }
+.status-label[data-status="Retained"] { background: #a3e6a1; color: #1f6a36; border-color: rgba(31,106,54,0.15); }
+.status-label[data-status="Pending"] { background: #fffacc; color: #8c7f00; border-color: rgba(140,127,0,0.15); }
+.status-label[data-status="Can't Help"],
+.status-label[data-status="Seen Can't Help"] { background: #ffb4b4; color: #9a0b0b; border-color: rgba(154,11,11,0.15); }
+
+/* =========================================================
+   Modal
+   ========================================================= */
 .modal-backdrop {
-  position: fixed; z-index: 9; top: 0; left: 0; width: 100vw; height: 100vh;
+  position: fixed;
+  z-index: 9;
+  inset: 0;
   background: rgba(30,39,66,0.28);
-  display: flex; align-items: center; justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .client-modal input,
 .client-modal select,
 .client-modal textarea {
   padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #d2dae6;
+  border-radius: 10px;
+  border: 1px solid rgba(210,218,230,0.95);
   font-size: 15px;
+  outline: none;
+}
+.client-modal input:focus,
+.client-modal select:focus,
+.client-modal textarea:focus {
+  border-color: rgba(48,81,228,0.55);
+  box-shadow: var(--focus);
 }
 
-.client-modal textarea {
-  resize: vertical;
+.client-modal textarea { resize: vertical; }
+
+/* =========================================================
+   Scrollbar (messages only)
+   ========================================================= */
+.messages::-webkit-scrollbar { width: 7px; }
+.messages::-webkit-scrollbar-track { background: #f1f3f6; border-radius: 4px; }
+.messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.messages::-webkit-scrollbar-thumb:hover { background: #a0b0d6; }
+
+/* =========================================================
+   Responsive
+   ========================================================= */
+@media (max-width: 720px) {
+  .inbox-container {
+    flex-direction: column;
+    height: 100%;
+    max-width: 100vw;
+    margin: 0;
+    border-radius: 0;
+  }
+  .inbox-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .inbox-main {
+    padding: 16px 14px;
+    height: calc(100vh - 180px);
+  }
+  .messages { max-height: 320px; }
 }
