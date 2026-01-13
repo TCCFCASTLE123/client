@@ -30,15 +30,17 @@ html, body, #root{
 
 .muted{ color: var(--muted); }
 
-/* Layout */
 .layout{
-  height:100%;
+  /* Fill remaining page nicely under your header/links */
+  min-height: calc(100vh - 110px);
   display:flex;
   gap:14px;
   padding:18px;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: none;     /* IMPORTANT: stop centering/narrowing */
+  margin: 0;           /* IMPORTANT */
+  justify-content: center;
 }
+
 
 .sidebar{
   width: 360px;
