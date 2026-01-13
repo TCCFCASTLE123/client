@@ -403,3 +403,26 @@ html, body, #root{
   .grid-2{ grid-template-columns: 1fr; }
   .bubble{ max-width: 92%; }
 }
+/* ===== Compatibility: your existing page header + links ===== */
+h1{
+  margin: 18px 18px 6px;
+  font-size: 26px;
+  font-weight: 900;
+  color: #111827;
+}
+
+a{
+  color: var(--primary);
+  font-weight: 800;
+  text-decoration: none;
+  margin-right: 12px;
+}
+
+a:hover{
+  text-decoration: underline;
+}
+
+/* Pull the layout up so it doesn't feel "detached" */
+.layout{
+  margin-top: 8px;
+}
