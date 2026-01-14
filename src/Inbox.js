@@ -9,9 +9,15 @@ function canonicalPhone(input) {
   return digits;
 }
 
-// =========================
-// ClientForm Component
-// =========================
+/**
+ * Map statuses -> consistent CSS data-status values
+ * (We use the status NAME as the key.)
+ */
+function getStatusNameById(statuses, statusId) {
+  const found = statuses.find((s) => String(s.id) === String(statusId));
+  return found ? found.name : "";
+}
+
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
   const [phone, setPhone] = useState(initialData.phone || "");
@@ -151,12 +157,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
             onChange={(e) => setEmail(e.target.value)}
             style={{ flex: 1 }}
           />
-          <select
-            value={office}
-            onChange={(e) => setOffice(e.target.value)}
-            style={{ flex: 1 }}
-            required
-          >
+          <select value={office} onChange={(e) => setOffice(e.target.value)} style={{ flex: 1 }} required>
             <option value="">Select Office</option>
             <option value="PHX">PHX</option>
             <option value="MESA">MESA</option>
@@ -165,32 +166,21 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           </select>
         </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
-          <input
-            placeholder="Appointment Date/Time"
-            value={appointmentDate}
-            onChange={(e) => setAppointmentDate(e.target.value)}
-            style={{ flex: 1 }}
-          />
-        </div>
+        <input
+          placeholder="Appointment Date/Time"
+          value={appointmentDate}
+          onChange={(e) => setAppointmentDate(e.target.value)}
+          style={{ width: "100%" }}
+        />
 
         <div style={{ display: "flex", gap: 12 }}>
-          <select
-            value={caseType}
-            onChange={(e) => setCaseType(e.target.value)}
-            style={{ flex: 1 }}
-            required
-          >
+          <select value={caseType} onChange={(e) => setCaseType(e.target.value)} style={{ flex: 1 }} required>
             <option value="">Select Case Type</option>
             <option value="Criminal">Criminal</option>
             <option value="Immigration">Immigration</option>
             <option value="Bankruptcy">Bankruptcy</option>
           </select>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ flex: 1 }}
-          >
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ flex: 1 }}>
             <option value="English">English</option>
             <option value="Spanish">Spanish</option>
           </select>
@@ -204,7 +194,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           style={{ width: "100%", marginTop: 4 }}
         />
 
-        <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+        <div className="modal-buttons" style={{ display: "flex", gap: 10, marginTop: 6 }}>
           <button type="submit" style={{ flex: 1 }} disabled={saving}>
             {saving ? "Saving..." : initialData.id ? "Save" : "Add"}
           </button>
@@ -217,9 +207,6 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   );
 }
 
-// =========================
-// Inbox Component
-// =========================
 function Inbox() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -254,44 +241,36 @@ function Inbox() {
   }, []);
 
   useEffect(() => {
-    if (selectedClient) {
-      setLoadingMessages(true);
-      fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data);
-          setLoadingMessages(false);
-        })
-        .catch((err) => {
-          alert(err.message);
-          setLoadingMessages(false);
-        });
-    } else {
+    if (!selectedClient) {
       setMessages([]);
+      return;
     }
+
+    setLoadingMessages(true);
+    fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
+      headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setMessages(data);
+        setLoadingMessages(false);
+      })
+      .catch((err) => {
+        alert(err.message);
+        setLoadingMessages(false);
+      });
   }, [selectedClient]);
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (newMsg) {
-      setTyping(true);
-      const timeout = setTimeout(() => setTyping(false), 1200);
-      return () => clearTimeout(timeout);
-    }
-    setTyping(false);
+    if (!newMsg) return setTyping(false);
+    setTyping(true);
+    const timeout = setTimeout(() => setTyping(false), 1200);
+    return () => clearTimeout(timeout);
   }, [newMsg]);
-
-  const getStatusName = (statusId) => {
-    const found = statuses.find((s) => String(s.id) === String(statusId));
-    return found ? found.name : "";
-  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -311,11 +290,11 @@ function Inbox() {
       });
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
-      const data = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
+      const convo = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
         headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       }).then((res) => res.json());
 
-      setMessages(data);
+      setMessages(convo);
       setNewMsg("");
     } catch (err) {
       alert("Could not send message: " + (err.message || err));
@@ -344,19 +323,21 @@ function Inbox() {
   };
 
   const handleDeleteClient = async () => {
-    if (window.confirm(`Delete client "${selectedClient.name}" and all messages?`)) {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/clients/${selectedClient.id}`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-        });
-        if (!res.ok) throw new Error("Failed to delete client");
-        setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
-        setSelectedClient(null);
-        setMessages([]);
-      } catch (err) {
-        alert(err.message || "Failed to delete client");
-      }
+    if (!selectedClient) return;
+    if (!window.confirm(`Delete client "${selectedClient.name}" and all messages?`)) return;
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/clients/${selectedClient.id}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      });
+      if (!res.ok) throw new Error("Failed to delete client");
+
+      setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
+      setSelectedClient(null);
+      setMessages([]);
+    } catch (err) {
+      alert(err.message || "Failed to delete client");
     }
   };
 
@@ -371,13 +352,11 @@ function Inbox() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) {
-          setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c)));
-          if (selectedClient && selectedClient.id === clientId) {
-            setSelectedClient((prev) => ({ ...prev, status_id: statusId }));
-          }
-        } else {
-          alert("Failed to update status.");
+        if (!data.success) return alert("Failed to update status.");
+
+        setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c)));
+        if (selectedClient && selectedClient.id === clientId) {
+          setSelectedClient((prev) => ({ ...prev, status_id: statusId }));
         }
       })
       .catch((err) => alert(err.message));
@@ -386,21 +365,24 @@ function Inbox() {
   const filteredClients = clients.filter((c) => {
     if (!search) return true;
     const s = search.toLowerCase();
-    const nameMatch = (c.name || "").toLowerCase().includes(s);
-    const phoneMatch = (c.phone || "").replace(/\D/g, "").includes(search.replace(/\D/g, ""));
-    return nameMatch || phoneMatch;
+    const nameOk = (c.name || "").toLowerCase().includes(s);
+    const phoneOk = (c.phone || "").replace(/\D/g, "").includes(search.replace(/\D/g, ""));
+    return nameOk || phoneOk;
   });
 
   return (
-    <div className="inbox-container">
+    <div className="inbox-container" style={{ display: "flex" }}>
+      {/* SIDEBAR */}
       <aside className="inbox-sidebar">
         <div className="sidebar-top">
-          <h3>Clients</h3>
+          <h3 style={{ margin: 0 }}>Clients</h3>
 
-          <button onClick={openAddClientForm}>Add Client</button>
+          <button onClick={openAddClientForm} className="sidebar-add-btn">
+            Add Client
+          </button>
 
           <input
-            className="client-search"
+            className="sidebar-search"
             type="text"
             placeholder="Search by name or phone.."
             value={search}
@@ -408,56 +390,61 @@ function Inbox() {
           />
         </div>
 
-        {/* ✅ ONLY this section scrolls (fixes “two sliders”) */}
-        <div className="client-list">
-          <ul className="client-ul">
+        {/* scroll only THIS list */}
+        <div className="sidebar-list">
+          <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
             {filteredClients.map((client) => {
+              const statusName = getStatusNameById(statuses, client.status_id);
               const selected = selectedClient && selectedClient.id === client.id;
-              const statusName = client.status_id ? getStatusName(client.status_id) : "";
 
               return (
                 <li
                   key={client.id}
                   className={`client-card ${selected ? "selected" : ""}`}
+                  data-status={statusName || ""}
                   onClick={() => setSelectedClient(client)}
                 >
-                  <div className="client-row">
-                    <div className="client-name">
-                      <span className="status-dot" data-status={statusName || ""} />
-                      {client.name || "No Name"}
-                    </div>
-                    <div className="client-phone">{client.phone || "No phone"}</div>
+                  {/* Row 1: name + pill */}
+                  <div className="client-row1">
+                    <div className="client-name">{client.name || "No Name"}</div>
+
+                    {!!statusName && (
+                      <span className="status-pill" data-status={statusName}>
+                        {statusName}
+                      </span>
+                    )}
                   </div>
 
-                  {/* ✅ Keep dropdown, no extra label underneath */}
-                  <select
-                    className="status-dropdown"
-                    value={client.status_id || ""}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(client.id, e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="">Select status...</option>
-                    {statuses.map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.name}
-                      </option>
-                    ))}
-                  </select>
+                  {/* Row 2: phone */}
+                  <div className="client-sub">{client.phone || "No phone"}</div>
 
-                  <div className="client-meta">
-                    {(client.language === "Spanish" ? "Spanish" : "English") || ""}
+                  {/* Row 3: dropdown (ONLY) — no duplicate text under it */}
+                  <div className="client-controls" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      className="status-dropdown compact"
+                      value={client.status_id || ""}
+                      onChange={(e) => handleStatusChange(client.id, e.target.value)}
+                    >
+                      <option value="">Select status...</option>
+                      {statuses.map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
+                  {/* Row 4: language */}
+                  <div className="client-meta">{client.language === "Spanish" ? "Spanish" : "English"}</div>
+
+                  {/* optional details when selected */}
                   {selected && (
                     <div className="client-details">
                       {client.email && <div>Email: {client.email}</div>}
-                      {client.notes && <div>Notes: {client.notes}</div>}
                       {client.office && <div>Office: {client.office}</div>}
                       {client.case_type && <div>Case: {client.case_type}</div>}
                       {client.appointment_datetime && <div>Appt: {client.appointment_datetime}</div>}
+                      {client.notes && <div>Notes: {client.notes}</div>}
                     </div>
                   )}
                 </li>
@@ -467,9 +454,10 @@ function Inbox() {
         </div>
       </aside>
 
+      {/* MAIN */}
       <main className="inbox-main">
         {!selectedClient && (
-          <div className="empty-state">
+          <div style={{ color: "#888", margin: "auto", textAlign: "center" }}>
             <h3>Select a client to view messages</h3>
           </div>
         )}
@@ -481,7 +469,7 @@ function Inbox() {
                 Conversation with {selectedClient.name}
               </h2>
 
-              <div className="header-actions">
+              <div style={{ display: "flex", gap: 10, marginLeft: "auto" }}>
                 <button className="edit-btn" onClick={openEditClientForm}>
                   Edit Client
                 </button>
@@ -494,12 +482,13 @@ function Inbox() {
             <div className="messages">
               {loadingMessages && <div>Loading messages...</div>}
               {!loadingMessages && messages.length === 0 && (
-                <div className="no-messages">No messages yet!</div>
+                <div className="no-messages" style={{ color: "#aaa" }}>
+                  No messages yet!
+                </div>
               )}
 
               {(() => {
                 let lastDate = null;
-
                 return messages.map((msg, i) => {
                   const msgDate = new Date(msg.timestamp);
                   const showDate =
@@ -509,15 +498,11 @@ function Inbox() {
                       msgDate.getMonth() === lastDate.getMonth() &&
                       msgDate.getDate() === lastDate.getDate()
                     );
-
                   if (showDate) lastDate = msgDate;
 
-                  const bubbleClass =
-                    msg.sender === "system"
-                      ? "system"
-                      : msg.sender === "me" || msg.direction === "outbound"
-                      ? "me"
-                      : "client";
+                  const isSystem = msg.sender === "system";
+                  const isMe = msg.sender === "me" || msg.direction === "outbound";
+                  const bubbleClass = isSystem ? "system" : isMe ? "me" : "client";
 
                   return (
                     <React.Fragment key={i}>
@@ -533,7 +518,7 @@ function Inbox() {
                           {format(msgDate, "h:mm a")}
                           {msg.direction === "outbound" && " • Sent"}
                           {msg.direction === "inbound" && " • Received"}
-                          {msg.sender === "system" && " • Automated"}
+                          {isSystem && " • Automated"}
                         </div>
                       </div>
                     </React.Fragment>
@@ -541,7 +526,11 @@ function Inbox() {
                 });
               })()}
 
-              {typing && <div className="typing-indicator">You are typing...</div>}
+              {typing && (
+                <div className="typing-indicator" style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>
+                  You are typing...
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
