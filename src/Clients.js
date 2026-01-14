@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 // Main ClientForm Component
-function ClientForm({ initialData = {}, onClose, onSave }) {
-  // All fields
+function Clients({ initialData = {}, onClose, onSave }) {
+  // Core fields
   const [name, setName] = useState(initialData.name || "");
   const [phone, setPhone] = useState(initialData.phone || "");
   const [email, setEmail] = useState(initialData.email || "");
@@ -10,15 +10,27 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [language, setLanguage] = useState(initialData.language || "English");
   const [office, setOffice] = useState(initialData.office || "");
   const [caseType, setCaseType] = useState(initialData.case_type || "");
-  const [appointmentDate, setAppointmentDate] = useState(initialData.AppointmentScheduledDate || "");
+  const [caseSubtype, setCaseSubtype] = useState(initialData.case_subtype || "");
+
+  // Appointment fields (split)
+  const [apptDate, setApptDate] = useState(initialData.appt_date || "");
+  const [apptTime, setApptTime] = useState(initialData.appt_time || "");
+
+  // Intake fields
+  const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
+  const [intakeCoordinator, setIntakeCoordinator] = useState(
+    initialData.intake_coordinator || ""
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return alert("Name is required");
+
     const method = initialData.id ? "PATCH" : "POST";
     const url = initialData.id
       ? `${process.env.REACT_APP_API_URL}/api/clients/${initialData.id}`
       : `${process.env.REACT_APP_API_URL}/api/clients`;
+
     try {
       const response = await fetch(url, {
         method,
@@ -34,9 +46,14 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           language,
           office,
           case_type: caseType,
-          AppointmentScheduledDate: appointmentDate,
+          case_subtype: caseSubtype,
+          appt_date: apptDate,
+          appt_time: apptTime,
+          appt_setter: apptSetter,
+          intake_coordinator: intakeCoordinator,
         }),
       });
+
       if (!response.ok) throw new Error("Failed to save client");
       const savedClient = await response.json();
       onSave(savedClient);
@@ -67,30 +84,56 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
         <h3 style={{ margin: "0 0 10px 0" }}>
           {initialData.id ? "Edit Client" : "Add Client"}
         </h3>
-        <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
+
+        <div style={{ display: "flex", gap: 12 }}>
           <input
             placeholder="Name*"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
-            style={{ flex: 2, minWidth: 0 }}
+            style={{ flex: 2 }}
           />
           <input
             placeholder="Phone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            style={{ flex: 1, minWidth: 0, maxWidth: 170 }}
+            style={{ flex: 1, maxWidth: 170 }}
           />
         </div>
-        <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
+
+        {/* Appointment date & time */}
+        <div style={{ display: "flex", gap: 12 }}>
           <input
-            placeholder="Appointment Date/Time"
-            value={appointmentDate}
-            onChange={(e) => setAppointmentDate(e.target.value)}
-            style={{ flex: 1, minWidth: 0 }}
+            type="date"
+            value={apptDate}
+            onChange={(e) => setApptDate(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <input
+            type="time"
+            value={apptTime}
+            onChange={(e) => setApptTime(e.target.value)}
+            style={{ flex: 1 }}
           />
         </div>
+
+        {/* Intake fields */}
+        <div style={{ display: "flex", gap: 12 }}>
+          <input
+            placeholder="Appt Setter"
+            value={apptSetter}
+            onChange={(e) => setApptSetter(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <input
+            placeholder="I.C."
+            value={intakeCoordinator}
+            onChange={(e) => setIntakeCoordinator(e.target.value)}
+            style={{ flex: 1 }}
+          />
+        </div>
+
         <div style={{ display: "flex", gap: 12 }}>
           <input
             placeholder="Email"
@@ -111,6 +154,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
             <option value="ZOOM">ZOOM</option>
           </select>
         </div>
+
         <div style={{ display: "flex", gap: 12 }}>
           <select
             value={caseType}
@@ -123,15 +167,15 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
             <option value="Immigration">Immigration</option>
             <option value="Bankruptcy">Bankruptcy</option>
           </select>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+
+          <input
+            placeholder="Sub Case Type"
+            value={caseSubtype}
+            onChange={(e) => setCaseSubtype(e.target.value)}
             style={{ flex: 1 }}
-          >
-            <option value="English">English</option>
-            <option value="Spanish">Spanish</option>
-          </select>
+          />
         </div>
+
         <textarea
           placeholder="Notes"
           value={notes}
@@ -139,6 +183,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           rows={3}
           style={{ width: "100%", marginTop: 4 }}
         />
+
         <div className="modal-buttons" style={{ display: "flex", gap: 10, marginTop: 6 }}>
           <button type="submit" style={{ flex: 1 }}>
             {initialData.id ? "Save" : "Add"}
@@ -152,4 +197,4 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   );
 }
 
-export default ClientForm;
+export default Clients;
