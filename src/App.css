@@ -4,7 +4,7 @@
    - Shorter + reusable styles for dropdowns/pills
    ========================================================= */
 html, body, #root { height: 100%; }
-body { overflow: hidden; }
+body { overflow-y: auto; overflow-x: hidden; }
 
 /* ---------- Design Tokens ---------- */
 :root {
@@ -536,3 +536,25 @@ html, body, #root {
 .message.system .message-timestamp {
   color: #6d28d9 !important;
 }
+/* ===== FIX: full page scroll + left list scroll only ===== */
+
+/* allow the page to scroll */
+body { overflow-y: auto; overflow-x: hidden; }
+
+/* keep container from trapping scroll */
+.inbox-container { overflow: hidden; }
+
+/* sidebar should not be the scroll container */
+.inbox-sidebar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ✅ ONLY the UL list scrolls */
+.inbox-sidebar ul {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  padding-right: 6px;
+}
+
