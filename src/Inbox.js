@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
+import { io } from "socket.io-client";
 
 function canonicalPhone(input) {
   if (!input) return "";
@@ -15,7 +16,6 @@ function canonicalPhone(input) {
 function statusThemeByName(nameRaw) {
   const name = String(nameRaw || "").trim();
 
-  // colors chosen to match your sheet vibe (pastel but clear)
   const MAP = {
     "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
     "Set": { border: "#cbd5e1", pillBg: "#f1f5f9", pillText: "#334155" },
@@ -32,6 +32,28 @@ function statusThemeByName(nameRaw) {
   };
 
   return MAP[name] || { border: "#e2e8f0", pillBg: "#f1f5f9", pillText: "#334155" };
+}
+
+/* =========================
+   Tiny beep (no audio file)
+   ========================= */
+function playBeep() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioContext();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g);
+    g.connect(ctx.destination);
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.value = 0.04;
+    o.start();
+    setTimeout(() => {
+      o.stop();
+      ctx.close();
+    }, 120);
+  } catch {}
 }
 
 // =========================
@@ -59,22 +81,10 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
     const cleanName = (name || "").trim();
     const cleanPhone = canonicalPhone(phone);
 
-    if (!cleanName) {
-      setErrMsg("Name is required.");
-      return;
-    }
-    if (!cleanPhone || cleanPhone.length < 10) {
-      setErrMsg("Phone number is required (10 digits).");
-      return;
-    }
-    if (!office) {
-      setErrMsg("Office is required.");
-      return;
-    }
-    if (!caseType) {
-      setErrMsg("Case Type is required.");
-      return;
-    }
+    if (!cleanName) return setErrMsg("Name is required.");
+    if (!cleanPhone || cleanPhone.length < 10) return setErrMsg("Phone number is required (10 digits).");
+    if (!office) return setErrMsg("Office is required.");
+    if (!caseType) return setErrMsg("Case Type is required.");
 
     const method = initialData.id ? "PATCH" : "POST";
     const url = initialData.id
@@ -188,12 +198,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
             onChange={(e) => setEmail(e.target.value)}
             style={{ flex: 1 }}
           />
-          <select
-            value={office}
-            onChange={(e) => setOffice(e.target.value)}
-            style={{ flex: 1 }}
-            required
-          >
+          <select value={office} onChange={(e) => setOffice(e.target.value)} style={{ flex: 1 }} required>
             <option value="">Select Office</option>
             <option value="PHX">PHX</option>
             <option value="MESA">MESA</option>
@@ -212,22 +217,13 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
         </div>
 
         <div style={{ display: "flex", gap: 12 }}>
-          <select
-            value={caseType}
-            onChange={(e) => setCaseType(e.target.value)}
-            style={{ flex: 1 }}
-            required
-          >
+          <select value={caseType} onChange={(e) => setCaseType(e.target.value)} style={{ flex: 1 }} required>
             <option value="">Select Case Type</option>
             <option value="Criminal">Criminal</option>
             <option value="Immigration">Immigration</option>
             <option value="Bankruptcy">Bankruptcy</option>
           </select>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ flex: 1 }}
-          >
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={{ flex: 1 }}>
             <option value="English">English</option>
             <option value="Spanish">Spanish</option>
           </select>
@@ -270,6 +266,16 @@ function Inbox() {
   const [search, setSearch] = useState("");
   const messagesEndRef = useRef(null);
 
+  const selectedClientId = selectedClient?.id || null;
+
+  // ✅ request browser notification permission once
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Load statuses + clients (keep your fetch, but preserve unread counts)
   useEffect(() => {
     fetch(process.env.REACT_APP_API_URL + "/api/statuses")
       .then((res) => res.json())
@@ -281,7 +287,30 @@ function Inbox() {
         headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       })
         .then((res) => res.json())
-        .then(setClients)
+        .then((fresh) => {
+          setClients((prev) => {
+            // preserve unreadCount + lastMessageAt/text from current state
+            const prevById = new Map(prev.map((c) => [c.id, c]));
+            const merged = fresh.map((c) => {
+              const old = prevById.get(c.id);
+              return {
+                ...c,
+                unreadCount: old?.unreadCount || 0,
+                lastMessageAt: old?.lastMessageAt || null,
+                lastMessageText: old?.lastMessageText || "",
+              };
+            });
+
+            // sort by lastMessageAt if we have it (socket will populate it)
+            merged.sort((a, b) => {
+              const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+              const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+              return tb - ta;
+            });
+
+            return merged;
+          });
+        })
         .catch((err) => alert(err.message));
     };
 
@@ -290,6 +319,79 @@ function Inbox() {
     return () => clearInterval(intervalId);
   }, []);
 
+  // ✅ SOCKET: listen for new messages + move client to top + notify
+  useEffect(() => {
+    const socket = io(process.env.REACT_APP_API_URL, {
+      transports: ["websocket"],
+      auth: { token: localStorage.getItem("token") }, // ok even if backend ignores it
+    });
+
+    const onAnyMessage = (msg) => {
+      if (!msg) return;
+
+      const msgClientId = msg.client_id;
+      if (!msgClientId) return;
+
+      const isInbound =
+        msg.direction === "inbound" || msg.sender === "client";
+
+      const isViewingThisChat = selectedClientId === msgClientId;
+
+      // if we are viewing this client, append to messages live
+      if (isViewingThisChat) {
+        setMessages((prev) => [...prev, msg]);
+      }
+
+      // update client list: move to top + unread counts
+      setClients((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((c) => c.id === msgClientId);
+        if (idx === -1) return prev;
+
+        const old = next[idx];
+        const updated = {
+          ...old,
+          lastMessageAt: msg.timestamp || new Date().toISOString(),
+          lastMessageText: msg.text || "",
+          unreadCount:
+            isInbound && !isViewingThisChat
+              ? (old.unreadCount || 0) + 1
+              : (old.unreadCount || 0),
+        };
+
+        next.splice(idx, 1);
+        next.unshift(updated);
+        return next;
+      });
+
+      // browser notification + beep only for inbound when not viewing
+      if (isInbound && !isViewingThisChat) {
+        playBeep();
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          const title = `New text from ${msg.client_name || "Client"}`;
+          const body = (msg.text || "").slice(0, 140) || "New message";
+          try {
+            new Notification(title, { body });
+          } catch {}
+        }
+      }
+    };
+
+    // listen to common event names (in case backend differs)
+    socket.on("newMessage", onAnyMessage);
+    socket.on("message", onAnyMessage);
+    socket.on("message:new", onAnyMessage);
+
+    return () => {
+      socket.off("newMessage", onAnyMessage);
+      socket.off("message", onAnyMessage);
+      socket.off("message:new", onAnyMessage);
+      socket.disconnect();
+    };
+  }, [selectedClientId]);
+
+  // fetch messages when selecting a client
   useEffect(() => {
     if (selectedClient) {
       setLoadingMessages(true);
@@ -310,6 +412,7 @@ function Inbox() {
     }
   }, [selectedClient]);
 
+  // scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -348,6 +451,25 @@ function Inbox() {
       });
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
+      // move this client to top immediately like a phone
+      setClients((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((c) => c.id === selectedClient.id);
+        if (idx === -1) return prev;
+
+        const old = next[idx];
+        const updated = {
+          ...old,
+          lastMessageAt: new Date().toISOString(),
+          lastMessageText: payload.text,
+        };
+
+        next.splice(idx, 1);
+        next.unshift(updated);
+        return next;
+      });
+
+      // keep your existing conversation refresh (safe)
       await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
         headers: { Authorization: "Bearer " + localStorage.getItem("token") },
       })
@@ -356,6 +478,7 @@ function Inbox() {
           setMessages(data);
           if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         });
+
       setNewMsg("");
     } catch (err) {
       alert("Could not send message: " + (err.message || err));
@@ -374,10 +497,10 @@ function Inbox() {
 
   const handleClientSave = (savedClient) => {
     if (editClientData) {
-      setClients(clients.map((c) => (c.id === savedClient.id ? savedClient : c)));
+      setClients((prev) => prev.map((c) => (c.id === savedClient.id ? savedClient : c)));
       setSelectedClient(savedClient);
     } else {
-      setClients([savedClient, ...clients]);
+      setClients((prev) => [savedClient, ...prev]);
     }
     setShowClientForm(false);
   };
@@ -390,7 +513,7 @@ function Inbox() {
           headers: { Authorization: "Bearer " + localStorage.getItem("token") },
         });
         if (!res.ok) throw new Error("Failed to delete client");
-        setClients(clients.filter((c) => c.id !== selectedClient.id));
+        setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
         setSelectedClient(null);
         setMessages([]);
       } catch (err) {
@@ -429,12 +552,22 @@ function Inbox() {
     return found ? found.name : "";
   };
 
-  const filteredClients = clients.filter(
-    (c) =>
-      !search ||
-      (c.name && c.name.toLowerCase().includes(search.toLowerCase())) ||
-      (c.phone && c.phone.replace(/\D/g, "").includes(search.replace(/\D/g, "")))
-  );
+  const filteredClients = useMemo(() => {
+    return clients.filter(
+      (c) =>
+        !search ||
+        (c.name && c.name.toLowerCase().includes(search.toLowerCase())) ||
+        (c.phone && c.phone.replace(/\D/g, "").includes(search.replace(/\D/g, "")))
+    );
+  }, [clients, search]);
+
+  const handleSelectClient = (client) => {
+    setSelectedClient(client);
+    // clear unread when opening the chat
+    setClients((prev) =>
+      prev.map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c))
+    );
+  };
 
   return (
     <div
@@ -442,7 +575,7 @@ function Inbox() {
       style={{
         display: "flex",
         minHeight: 600,
-        height: "calc(100vh - 190px)", // prevents endless page scroll + kills double scrollbars
+        height: "calc(100vh - 190px)",
         maxWidth: 1100,
         margin: "20px auto",
         overflow: "hidden",
@@ -455,7 +588,7 @@ function Inbox() {
           background: "#f8fafc",
           padding: 18,
           height: "100%",
-          overflowY: "auto", // ONLY scrollbar on the list
+          overflowY: "auto",
         }}
       >
         <h3 style={{ marginTop: 0 }}>Clients</h3>
@@ -501,7 +634,7 @@ function Inbox() {
               <li
                 key={client.id}
                 className={selectedClient && selectedClient.id === client.id ? "selected" : ""}
-                onClick={() => setSelectedClient(client)}
+                onClick={() => handleSelectClient(client)}
                 style={{
                   background: selectedClient && selectedClient.id === client.id ? "#eef2ff" : "#fff",
                   borderRadius: 10,
@@ -512,7 +645,7 @@ function Inbox() {
                     selectedClient && selectedClient.id === client.id
                       ? "0 2px 12px #c7d2fe50"
                       : "0 1px 4px #cbd5e140",
-                  borderLeft: client.status_id ? `6px solid ${theme.border}` : "6px solid transparent", // ✅ BORDER COLOR (not dot)
+                  borderLeft: client.status_id ? `6px solid ${theme.border}` : "6px solid transparent",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -520,7 +653,23 @@ function Inbox() {
                     {client.name || "No Name"}
                   </div>
 
-                  {/* ✅ small pill NEXT TO NAME (not under dropdown) */}
+                  {/* unread badge */}
+                  {!!client.unreadCount && (
+                    <span
+                      style={{
+                        background: "#ef4444",
+                        color: "#fff",
+                        borderRadius: 999,
+                        padding: "2px 8px",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {client.unreadCount}
+                    </span>
+                  )}
+
                   {statusName && (
                     <span
                       style={{
@@ -542,7 +691,6 @@ function Inbox() {
                   {client.phone || "No phone"}
                 </div>
 
-                {/* ✅ dropdown stays, but fits the card (smaller + no overflow) */}
                 <div style={{ marginTop: 8 }}>
                   <select
                     className="status-dropdown"
@@ -570,8 +718,6 @@ function Inbox() {
                       </option>
                     ))}
                   </select>
-
-                  {/* ✅ REMOVED the duplicate extra label under dropdown (your request) */}
                 </div>
 
                 <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
@@ -600,7 +746,7 @@ function Inbox() {
           padding: 32,
           minHeight: 600,
           height: "100%",
-          overflow: "hidden", // prevents second scrollbar
+          overflow: "hidden",
         }}
       >
         {!selectedClient && (
@@ -611,10 +757,7 @@ function Inbox() {
 
         {selectedClient && (
           <>
-            <div
-              className="header-row"
-              style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}
-            >
+            <div className="header-row" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
               <h2 style={{ margin: 0, fontWeight: 700 }}>
                 Conversation with {selectedClient.name}
               </h2>
@@ -661,7 +804,7 @@ function Inbox() {
                 borderRadius: 12,
                 padding: 18,
                 marginBottom: 16,
-                height: "calc(100% - 120px)", // keeps layout stable, avoids page scroll
+                height: "calc(100% - 120px)",
                 overflowY: "auto",
                 boxShadow: "0 1px 4px #e0e7ef",
               }}
@@ -690,11 +833,7 @@ function Inbox() {
 
                   return (
                     <React.Fragment key={i}>
-                      {showDate && (
-                        <div className="date-divider">
-                          {format(msgDate, "EEEE, MMM d, yyyy")}
-                        </div>
-                      )}
+                      {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
 
                       <div
                         className={`message ${
@@ -705,11 +844,9 @@ function Inbox() {
                             : "client"
                         }`}
                         style={{
-                          // ✅ restore the AUTOMATED bubble look
                           background: isSystem ? "#f1f5f9" : undefined,
                           border: isSystem ? "1px solid #e2e8f0" : undefined,
                           color: isSystem ? "#6d28d9" : undefined,
-                          fontStyle: isSystem ? "normal" : undefined,
                           padding: isSystem ? "10px 14px" : "7px 16px",
                           borderRadius: isSystem ? 16 : 10,
                           margin: "8px 0",
@@ -743,21 +880,14 @@ function Inbox() {
               })()}
 
               {typing && (
-                <div
-                  className="typing-indicator"
-                  style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}
-                >
+                <div className="typing-indicator" style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>
                   You are typing...
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            <form
-              className="message-input-row"
-              onSubmit={handleSend}
-              style={{ display: "flex", gap: 8 }}
-            >
+            <form className="message-input-row" onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
               <input
                 type="text"
                 placeholder="Type your message..."
