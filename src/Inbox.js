@@ -728,11 +728,20 @@ function Inbox() {
           overflow: "hidden",
         }}
       >
-        {!selectedClient && (
-          <div style={{ color: "#888", margin: "auto", textAlign: "center" }}>
-            <h3>Select a client to view messages</h3>
-          </div>
-        )}
+    {!selectedClient && (
+  <div
+    style={{
+      color: "#64748b",
+      margin: "auto",
+      textAlign: "center",
+      fontSize: 16,
+      fontWeight: 500,
+    }}
+  >
+    Select a client to view messages
+  </div>
+)}
+
 
         {selectedClient && (
           <>
