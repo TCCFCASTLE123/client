@@ -57,14 +57,15 @@ function App() {
           localStorage.clear();
           setLoggedIn(false);
         }} />
-        <main style={{ minHeight: "80vh" }}>
-          <Routes>
-            <Route path="/" element={<Inbox />} />
-            <Route path="/admin/templates" element={<AdminTemplates />} />
-            <Route path="/admin/templates/new" element={<TemplateFormPage />} />
-            <Route path="/admin/templates/:id" element={<TemplateFormPage />} />
-          </Routes>
-        </main>
+       <main className="app-main">
+  <Routes>
+    <Route path="/" element={<Inbox />} />
+    <Route path="/admin/templates" element={<AdminTemplates />} />
+    <Route path="/admin/templates/new" element={<TemplateFormPage />} />
+    <Route path="/admin/templates/:id" element={<TemplateFormPage />} />
+  </Routes>
+</main>
+
       </div>
     </Router>
   );
