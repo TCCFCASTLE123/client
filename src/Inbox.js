@@ -16,7 +16,47 @@ function canonicalPhone(input) {
 function getStatusNameById(statuses, statusId) {
   const found = statuses.find((s) => String(s.id) === String(statusId));
   return found ? found.name : "";
+} function getStatusColor(status) {
+  switch (status) {
+    case "No Show": return "#ffe066";
+    case "Set": return "#e5e7eb";
+    case "Attempted/Unsuccessful": return "#8ee7f3";
+    case "Working To Set": return "#e4d2fa";
+    case "Showed": return "#e9ecef";
+    case "Did Not Retain": return "#ffc6a0";
+    case "No Money": return "#adb5bd";
+    case "Retained": return "#a3e6a1";
+    case "Pending": return "#fffacc";
+    case "Can't Help":
+    case "Seen Can't Help": return "#ffb4b4";
+    case "Referred Out": return "#fca5a5";
+    default: return "#e6edf5";
+  }
 }
+
+function getStatusPillBg(status) {
+  // same mapping but slightly softer look is fine
+  return getStatusColor(status);
+}
+
+function getStatusPillText(status) {
+  switch (status) {
+    case "No Show": return "#7a5b00";
+    case "Pending": return "#7a5b00";
+    case "Attempted/Unsuccessful": return "#075985";
+    case "Working To Set": return "#6b21a8";
+    case "Did Not Retain": return "#92400e";
+    case "Retained": return "#14532d";
+    case "No Money": return "#111827";
+    case "Can't Help":
+    case "Seen Can't Help":
+    case "Referred Out": return "#7f1d1d";
+    case "Set": return "#111827";
+    case "Showed": return "#4b5563";
+    default: return "#374151";
+  }
+}
+
 
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
@@ -373,86 +413,150 @@ function Inbox() {
   return (
     <div className="inbox-container" style={{ display: "flex" }}>
       {/* SIDEBAR */}
-      <aside className="inbox-sidebar">
-        <div className="sidebar-top">
-          <h3 style={{ margin: 0 }}>Clients</h3>
+    <aside
+  className="inbox-sidebar"
+  style={{
+    width: 360,
+    height: "calc(100vh - 160px)", // matches header height-ish
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    background: "#f6f8fa",
+    borderRight: "1px solid #e0e6ed",
+    borderRadius: 12,
+    padding: 14,
+  }}
+>
+  {/* TOP: fixed */}
+  <div style={{ flex: "0 0 auto" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <h3 style={{ margin: 0, fontWeight: 800, color: "#324150" }}>Clients</h3>
+      <button
+        onClick={openAddClientForm}
+        style={{
+          background: "#374151",
+          color: "#fff",
+          border: "none",
+          borderRadius: 10,
+          padding: "8px 12px",
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        Add Client
+      </button>
+    </div>
 
-          <button onClick={openAddClientForm} className="sidebar-add-btn">
-            Add Client
-          </button>
+    <input
+      type="text"
+      placeholder="Search by name or phone.."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        marginBottom: 12,
+        padding: "10px 12px",
+        borderRadius: 10,
+        border: "1px solid #cbd5e1",
+        fontSize: 14,
+        outline: "none",
+      }}
+    />
+  </div>
 
-          <input
-            className="sidebar-search"
-            type="text"
-            placeholder="Search by name or phone.."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+  {/* LIST: the ONLY scrolling area */}
+  <div
+    style={{
+      flex: "1 1 auto",
+      overflowY: "auto",
+      paddingRight: 6,
+    }}
+  >
+    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      {filteredClients.map((client) => {
+        const statusName = getStatusNameById(statuses, client.status_id);
+        const selected = selectedClient && selectedClient.id === client.id;
 
-        {/* scroll only THIS list */}
-        <div className="sidebar-list">
-          <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
-            {filteredClients.map((client) => {
-              const statusName = getStatusNameById(statuses, client.status_id);
-              const selected = selectedClient && selectedClient.id === client.id;
+        return (
+          <li
+            key={client.id}
+            onClick={() => setSelectedClient(client)}
+            style={{
+              background: selected ? "#eef2ff" : "#fff",
+              borderRadius: 14,
+              padding: 12,
+              marginBottom: 10,
+              cursor: "pointer",
+              border: "1px solid #e6edf5",
+              borderLeft: `6px solid ${getStatusColor(statusName)}`,
+              boxShadow: selected
+                ? "0 2px 14px rgba(99,102,241,0.18)"
+                : "0 1px 5px rgba(0,0,0,0.05)",
+            }}
+          >
+            {/* NAME + pill */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 13, lineHeight: 1.2 }}>
+                {client.name || "No Name"}
+              </div>
 
-              return (
-                <li
-                  key={client.id}
-                  className={`client-card ${selected ? "selected" : ""}`}
-                  data-status={statusName || ""}
-                  onClick={() => setSelectedClient(client)}
+              {!!statusName && (
+                <span
+                  style={{
+                    padding: "2px 10px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: getStatusPillBg(statusName),
+                    color: getStatusPillText(statusName),
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    whiteSpace: "nowrap",
+                  }}
                 >
-                  {/* Row 1: name + pill */}
-                  <div className="client-row1">
-                    <div className="client-name">{client.name || "No Name"}</div>
+                  {statusName}
+                </span>
+              )}
+            </div>
 
-                    {!!statusName && (
-                      <span className="status-pill" data-status={statusName}>
-                        {statusName}
-                      </span>
-                    )}
-                  </div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>
+              {client.phone || "No phone"}
+            </div>
 
-                  {/* Row 2: phone */}
-                  <div className="client-sub">{client.phone || "No phone"}</div>
+            {/* DROPDOWN ONLY (no duplicate text under it) */}
+            <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 8 }}>
+              <select
+                value={client.status_id || ""}
+                onChange={(e) => handleStatusChange(client.id, e.target.value)}
+                style={{
+                  width: "100%",
+                  height: 30,
+                  borderRadius: 10,
+                  border: "1px solid #d6e0ee",
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  background: "#fff",
+                }}
+              >
+                <option value="">Select status...</option>
+                {statuses.map((status) => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  {/* Row 3: dropdown (ONLY) — no duplicate text under it */}
-                  <div className="client-controls" onClick={(e) => e.stopPropagation()}>
-                    <select
-                      className="status-dropdown compact"
-                      value={client.status_id || ""}
-                      onChange={(e) => handleStatusChange(client.id, e.target.value)}
-                    >
-                      <option value="">Select status...</option>
-                      {statuses.map((status) => (
-                        <option key={status.id} value={status.id}>
-                          {status.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 8 }}>
+              {client.language === "Spanish" ? "Spanish" : "English"}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</aside>
 
-                  {/* Row 4: language */}
-                  <div className="client-meta">{client.language === "Spanish" ? "Spanish" : "English"}</div>
-
-                  {/* optional details when selected */}
-                  {selected && (
-                    <div className="client-details">
-                      {client.email && <div>Email: {client.email}</div>}
-                      {client.office && <div>Office: {client.office}</div>}
-                      {client.case_type && <div>Case: {client.case_type}</div>}
-                      {client.appointment_datetime && <div>Appt: {client.appointment_datetime}</div>}
-                      {client.notes && <div>Notes: {client.notes}</div>}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      </aside>
 
       {/* MAIN */}
       <main className="inbox-main">
