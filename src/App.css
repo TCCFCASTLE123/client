@@ -440,10 +440,8 @@ html, body, #root {
   height: 100%;
 }
 
-/* If you still see 2 scrollbars, this is the key */
-body {
-  overflow: hidden;
-}
+
+
 
 /* Make the app area fit the screen.
    If your header area is taller/shorter, adjust the 120px number. */
