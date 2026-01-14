@@ -62,6 +62,7 @@ function playBeep() {
 // =========================
 // ClientForm Component (UPDATED)
 // =========================
+
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
   const [phone, setPhone] = useState(initialData.phone || "");
@@ -72,18 +73,37 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [caseType, setCaseType] = useState(initialData.case_type || "");
   const [caseSubtype, setCaseSubtype] = useState(initialData.case_subtype || "");
 
-  // NEW — split appointment fields
   const [apptDate, setApptDate] = useState(initialData.appt_date || "");
   const [apptTime, setApptTime] = useState(initialData.appt_time || "");
 
-  // NEW — intake fields
   const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
-  const [intakeCoordinator, setIntakeCoordinator] = useState(
-    initialData.intake_coordinator || ""
-  );
+  const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || "");
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+
+  const rowStyle = { display: "flex", gap: 12, minWidth: 0 };
+  const fieldStyle = {
+    flex: 1,
+    minWidth: 0,
+    height: 38,
+    padding: "8px 10px",
+    borderRadius: 10,
+    border: "1px solid #cbd5e1",
+    fontSize: 14,
+    outline: "none",
+    background: "#fff",
+  };
+
+  const buttonStyle = {
+    flex: 1,
+    height: 38,
+    borderRadius: 10,
+    border: "none",
+    fontWeight: 700,
+    fontSize: 14,
+    cursor: "pointer",
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,8 +113,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
     const cleanPhone = canonicalPhone(phone);
 
     if (!cleanName) return setErrMsg("Name is required.");
-    if (!cleanPhone || cleanPhone.length < 10)
-      return setErrMsg("Phone number is required (10 digits).");
+    if (!cleanPhone || cleanPhone.length < 10) return setErrMsg("Phone number is required (10 digits).");
     if (!office) return setErrMsg("Office is required.");
     if (!caseType) return setErrMsg("Case Type is required.");
 
@@ -145,52 +164,97 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div
+      className="modal-backdrop"
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15, 23, 42, 0.35)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 18,
+        zIndex: 9999,
+      }}
+    >
       <form
         className="modal client-modal"
         onClick={(e) => e.stopPropagation()}
         onSubmit={handleSubmit}
         style={{
           width: "100%",
-          maxWidth: 460,
+          maxWidth: 520,
           background: "#fff",
           borderRadius: 16,
-          padding: 24,
-          boxShadow: "0 8px 32px #1e27429c",
+          padding: 22,
+          boxShadow: "0 12px 36px rgba(0,0,0,0.25)",
           display: "flex",
           flexDirection: "column",
           gap: 12,
-          overflow: "hidden",
         }}
       >
-        <h3>{initialData.id ? "Edit Client" : "Add Client"}</h3>
+        <h3 style={{ margin: "0 0 4px 0" }}>{initialData.id ? "Edit Client" : "Add Client"}</h3>
 
         {errMsg && (
-          <div style={{ background: "#fee2e2", color: "#991b1b", padding: 10, borderRadius: 10 }}>
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "10px 12px",
+              borderRadius: 10,
+              fontWeight: 700,
+              fontSize: 13,
+            }}
+          >
             {errMsg}
           </div>
         )}
 
-        <div style={{ display: "flex", gap: 12 }}>
-          <input placeholder="Name*" value={name} onChange={(e) => setName(e.target.value)} required />
-          <input placeholder="Phone*" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+        {/* Name + Phone */}
+        <div style={rowStyle}>
+          <input
+            placeholder="Name*"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={{ ...fieldStyle, flex: 1.2 }}
+          />
+          <input
+            placeholder="Phone*"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+            style={fieldStyle}
+          />
         </div>
 
-        {/* Appointment date + time */}
-        <div style={{ display: "flex", gap: 12 }}>
-          <input type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} />
-          <input type="time" value={apptTime} onChange={(e) => setApptTime(e.target.value)} />
+        {/* Appt Date + Appt Time */}
+        <div style={rowStyle}>
+          <input type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} style={fieldStyle} />
+          <input type="time" value={apptTime} onChange={(e) => setApptTime(e.target.value)} style={fieldStyle} />
         </div>
 
-        {/* Intake */}
-        <div style={{ display: "flex", gap: 12 }}>
-          <input placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} />
-          <input placeholder="I.C." value={intakeCoordinator} onChange={(e) => setIntakeCoordinator(e.target.value)} />
+        {/* Appt Setter + IC */}
+        <div style={rowStyle}>
+          <input
+            placeholder="Appt Setter"
+            value={apptSetter}
+            onChange={(e) => setApptSetter(e.target.value)}
+            style={fieldStyle}
+          />
+          <input
+            placeholder="I.C."
+            value={intakeCoordinator}
+            onChange={(e) => setIntakeCoordinator(e.target.value)}
+            style={fieldStyle}
+          />
         </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
-          <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <select value={office} onChange={(e) => setOffice(e.target.value)} required>
+        {/* Email + Office */}
+        <div style={rowStyle}>
+          <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} style={fieldStyle} />
+          <select value={office} onChange={(e) => setOffice(e.target.value)} required style={fieldStyle}>
             <option value="">Select Office</option>
             <option value="PHX">PHX</option>
             <option value="MESA">MESA</option>
@@ -199,8 +263,9 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           </select>
         </div>
 
-        <div style={{ display: "flex", gap: 12 }}>
-          <select value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
+        {/* Case Type + Sub Case Type */}
+        <div style={rowStyle}>
+          <select value={caseType} onChange={(e) => setCaseType(e.target.value)} required style={fieldStyle}>
             <option value="">Select Case Type</option>
             <option value="Criminal">Criminal</option>
             <option value="Immigration">Immigration</option>
@@ -210,16 +275,61 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
             placeholder="Sub Case Type"
             value={caseSubtype}
             onChange={(e) => setCaseSubtype(e.target.value)}
+            style={fieldStyle}
           />
         </div>
 
-        <textarea placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+        {/* Language */}
+        <div style={rowStyle}>
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} style={fieldStyle}>
+            <option value="English">English</option>
+            <option value="Spanish">Spanish</option>
+          </select>
+          <div style={{ flex: 1 }} />
+        </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button type="submit" disabled={saving}>
-            {saving ? "Saving..." : "Save"}
+        {/* Notes */}
+        <textarea
+          placeholder="Notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          style={{
+            width: "100%",
+            padding: "10px 10px",
+            borderRadius: 12,
+            border: "1px solid #cbd5e1",
+            fontSize: 14,
+            resize: "vertical",
+          }}
+        />
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              ...buttonStyle,
+              background: "#6366f1",
+              color: "#fff",
+              opacity: saving ? 0.75 : 1,
+            }}
+          >
+            {saving ? "Saving..." : initialData.id ? "Save" : "Add"}
           </button>
-          <button type="button" onClick={onClose} disabled={saving}>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            style={{
+              ...buttonStyle,
+              background: "#e5e7eb",
+              color: "#111827",
+              opacity: saving ? 0.75 : 1,
+            }}
+          >
             Cancel
           </button>
         </div>
