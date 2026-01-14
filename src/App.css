@@ -557,4 +557,97 @@ body { overflow-y: auto; overflow-x: hidden; }
   flex: 1 1 auto;
   padding-right: 6px;
 }
+/* ==============================
+   ✅ FINAL OVERRIDE: Client Modal
+   Paste at VERY BOTTOM of App.css
+   ============================== */
+.cc-modal {
+  z-index: 9999 !important;
+  padding: 18px !important;
+  background: rgba(15, 23, 42, 0.35) !important;
+}
+
+.cc-modal-card {
+  width: 100% !important;
+  max-width: 520px !important;
+  background: #fff !important;
+  border-radius: 16px !important;
+  padding: 22px !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.25) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.cc-modal-title {
+  margin: 0 0 4px 0 !important;
+  font-weight: 800 !important;
+}
+
+.cc-modal-error {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+.cc-row {
+  display: flex !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+.cc-row > * {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+
+.cc-field {
+  width: 100% !important;
+  height: 38px !important;
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px !important;
+  outline: none !important;
+  background: #fff !important;
+}
+
+.cc-textarea {
+  width: 100% !important;
+  padding: 10px 10px !important;
+  border-radius: 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  font-size: 14px !important;
+  resize: vertical !important;
+}
+
+.cc-btn-row {
+  display: flex !important;
+  gap: 10px !important;
+  margin-top: 4px !important;
+}
+
+.cc-btn {
+  flex: 1 1 0 !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
+
+.cc-btn-primary {
+  background: #6366f1 !important;
+  color: #fff !important;
+}
+
+.cc-btn-ghost {
+  background: #e5e7eb !important;
+  color: #111827 !important;
+}
+
 
