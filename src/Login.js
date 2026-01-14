@@ -16,8 +16,8 @@ function Login({ onLogin }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
+          username: username.trim(),   // ✅ ok
+          password: password,          // ✅ DO NOT trim
         }),
       });
 
@@ -56,6 +56,9 @@ function Login({ onLogin }) {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
         />
 
         <input
