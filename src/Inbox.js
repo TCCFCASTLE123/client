@@ -413,7 +413,6 @@ function Inbox() {
   to: selectedClient.phone,
   text: newMsg,
   client_id: selectedClient.id,
-  user_id: authUser.id, // <-- add this
 };
 
 
