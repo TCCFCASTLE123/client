@@ -66,8 +66,27 @@ function getToken() {
 
 function redirectToLogin() {
   localStorage.removeItem("token");
-  // Change this if your login route is different:
   window.location.href = "/login";
+}
+
+/** =========================
+ * Helper: nice sender label
+ * ========================= */
+function prettyName(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  // common junk values
+  if (s === "me") return "You";
+  if (s === "agent") return "Agent";
+  if (s === "system") return "Automated";
+  if (s === "client") return "Client";
+  // Title-case basic
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function safeDate(ts) {
+  const d = ts ? new Date(ts) : new Date();
+  return isNaN(d.getTime()) ? new Date() : d;
 }
 
 /** =========================
@@ -110,14 +129,11 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
       ? `${process.env.REACT_APP_API_URL}/api/clients/${initialData.id}`
       : `${process.env.REACT_APP_API_URL}/api/clients`;
 
-    // Build payload WITHOUT blank overwrites
     const payload = {};
 
-    // required
     if (cleanName) payload.name = cleanName;
     if (cleanPhone) payload.phone = cleanPhone;
 
-    // optional (only if nonblank)
     if (email && email.trim()) payload.email = email.trim();
     if (notes && notes.trim()) payload.notes = notes.trim();
     if (language && language.trim()) payload.language = language.trim();
@@ -126,8 +142,8 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
     if (caseType && caseType.trim()) payload.case_type = caseType.trim();
     if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
 
-    if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim(); // YYYY-MM-DD
-    if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim(); // h:mm A
+    if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim();
+    if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
 
     if (apptSetter && apptSetter.trim()) payload.appt_setter = apptSetter.trim();
     if (ic && ic.trim()) payload.ic = ic.trim();
@@ -240,6 +256,80 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 }
 
 /** =========================
+ * Toast / Banner (frontend only)
+ * ========================= */
+function ToastBanner({ toast, onClose, onJump }) {
+  if (!toast?.show) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 18,
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: 99999,
+        width: "min(680px, calc(100vw - 24px))",
+        background: "#111827",
+        color: "#fff",
+        borderRadius: 14,
+        boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+        padding: "12px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+      }}
+    >
+      <div style={{ width: 10, height: 10, borderRadius: 999, background: "#22c55e", flex: "0 0 auto" }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.2 }}>
+          New message
+        </div>
+        <div style={{ fontSize: 13, opacity: 0.92, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {toast.text}
+        </div>
+      </div>
+
+      {toast.clientId && (
+        <button
+          onClick={() => onJump(toast.clientId)}
+          style={{
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.10)",
+            color: "#fff",
+            padding: "8px 10px",
+            borderRadius: 12,
+            cursor: "pointer",
+            fontWeight: 800,
+            fontSize: 12,
+            whiteSpace: "nowrap",
+          }}
+        >
+          Open
+        </button>
+      )}
+
+      <button
+        onClick={onClose}
+        style={{
+          border: "none",
+          background: "transparent",
+          color: "rgba(255,255,255,0.75)",
+          cursor: "pointer",
+          fontSize: 18,
+          lineHeight: 1,
+          padding: "6px 8px",
+        }}
+        aria-label="Close"
+        title="Close"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+/** =========================
  * Inbox Component
  * ========================= */
 function Inbox() {
@@ -255,6 +345,12 @@ function Inbox() {
   const [search, setSearch] = useState("");
   const messagesEndRef = useRef(null);
 
+  // NEW UI STATES
+  const [toast, setToast] = useState({ show: false, text: "", clientId: null });
+  const toastTimerRef = useRef(null);
+  const [highlightClientId, setHighlightClientId] = useState(null);
+  const highlightTimerRef = useRef(null);
+
   const selectedClientId = selectedClient?.id || null;
 
   // ✅ request browser notification permission once
@@ -263,6 +359,22 @@ function Inbox() {
       Notification.requestPermission().catch(() => {});
     }
   }, []);
+
+  // ✅ helper: show toast (auto dismiss)
+  const showToast = (text, clientId) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ show: true, text, clientId: clientId || null });
+    toastTimerRef.current = setTimeout(() => {
+      setToast((t) => ({ ...t, show: false }));
+    }, 4200);
+  };
+
+  const flashClient = (clientId) => {
+    if (!clientId) return;
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    setHighlightClientId(clientId);
+    highlightTimerRef.current = setTimeout(() => setHighlightClientId(null), 1400);
+  };
 
   // ✅ Load statuses + clients (401-safe + array-safe)
   useEffect(() => {
@@ -344,7 +456,7 @@ function Inbox() {
   useEffect(() => {
     const socket = io(process.env.REACT_APP_API_URL, {
       transports: ["websocket"],
-      auth: { token: getToken() }, // ok even if backend ignores it
+      auth: { token: getToken() },
     });
 
     const onAnyMessage = (msg) => {
@@ -356,12 +468,12 @@ function Inbox() {
       const isInbound = msg.direction === "inbound" || msg.sender === "client";
       const isViewingThisChat = selectedClientId === msgClientId;
 
-      // if we are viewing this client, append to messages live
+      // If viewing this client, append live
       if (isViewingThisChat) {
         setMessages((prev) => [...(Array.isArray(prev) ? prev : []), msg]);
       }
 
-      // update client list: move to top + unread counts
+      // Update client list: move to top + unread counts
       setClients((prev) => {
         const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === msgClientId);
@@ -380,12 +492,20 @@ function Inbox() {
         return next;
       });
 
-      // browser notification + beep only for inbound when not viewing
+      // Alerts for inbound when NOT viewing
       if (isInbound && !isViewingThisChat) {
         playBeep();
 
+        const clientName =
+          msg.client_name ||
+          (Array.isArray(clients) ? clients.find((c) => c.id === msgClientId)?.name : null) ||
+          "Client";
+
+        showToast(`${clientName}: ${(msg.text || "").slice(0, 90)}`, msgClientId);
+        flashClient(msgClientId);
+
         if ("Notification" in window && Notification.permission === "granted") {
-          const title = `New text from ${msg.client_name || "Client"}`;
+          const title = `New text from ${clientName}`;
           const body = (msg.text || "").slice(0, 140) || "New message";
           try {
             new Notification(title, { body });
@@ -404,7 +524,8 @@ function Inbox() {
       socket.off("message:new", onAnyMessage);
       socket.disconnect();
     };
-  }, [selectedClientId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId]); // keep your original dependency
 
   // ✅ fetch messages when selecting a client (401-safe + array-safe)
   useEffect(() => {
@@ -419,12 +540,9 @@ function Inbox() {
       setLoadingMessages(true);
 
       try {
-        const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`,
-          {
-            headers: { Authorization: "Bearer " + getToken() },
-          }
-        );
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
+          headers: { Authorization: "Bearer " + getToken() },
+        });
 
         if (res.status === 401 || res.status === 403) {
           if (!cancelled) {
@@ -503,7 +621,7 @@ function Inbox() {
 
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
-      // move this client to top immediately like a phone
+      // move this client to top immediately
       setClients((prev) => {
         const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === selectedClient.id);
@@ -521,7 +639,7 @@ function Inbox() {
         return next;
       });
 
-      // refresh conversation (401-safe + array-safe)
+      // refresh conversation
       const res2 = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
         headers: { Authorization: "Bearer " + getToken() },
       });
@@ -642,378 +760,408 @@ function Inbox() {
     setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
   };
 
+  const jumpToClient = (clientId) => {
+    const target = (Array.isArray(clients) ? clients : []).find((c) => c.id === clientId);
+    if (target) {
+      handleSelectClient(target);
+      setToast((t) => ({ ...t, show: false }));
+    }
+  };
+
   return (
-    <div
-      className="inbox-container"
-      style={{
-        display: "flex",
-        minHeight: 600,
-        height: "calc(100vh - 190px)",
-        maxWidth: 1100,
-        margin: "20px auto",
-        overflow: "hidden",
-      }}
-    >
-      <aside
-        className="inbox-sidebar"
+    <>
+      <ToastBanner
+        toast={toast}
+        onClose={() => setToast((t) => ({ ...t, show: false }))}
+        onJump={jumpToClient}
+      />
+
+      <div
+        className="inbox-container"
         style={{
-          width: 340,
-          background: "#f8fafc",
-          padding: 18,
-          height: "100%",
-          overflowY: "auto",
-        }}
-      >
-        <h3 style={{ marginTop: 0 }}>Clients</h3>
-        <button
-          onClick={openAddClientForm}
-          style={{
-            width: "100%",
-            marginBottom: 12,
-            background: "#374151",
-            color: "#fff",
-            borderRadius: 8,
-            border: "none",
-            padding: "9px 0",
-            fontWeight: "bold",
-            fontSize: 15,
-            cursor: "pointer",
-          }}
-        >
-          Add Client
-        </button>
-
-        <input
-          style={{
-            width: "100%",
-            padding: "8px 10px",
-            marginBottom: 14,
-            borderRadius: 8,
-            border: "1px solid #cbd5e1",
-            fontSize: 14,
-          }}
-          type="text"
-          placeholder="Search by name or phone.."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
-          {filteredClients.map((client) => {
-            const statusName = client.status_id ? getStatusName(client.status_id) : "";
-            const theme = statusThemeByName(statusName);
-
-            return (
-              <li
-                key={client.id}
-                className={selectedClient && selectedClient.id === client.id ? "selected" : ""}
-                onClick={() => handleSelectClient(client)}
-                style={{
-                  background: selectedClient && selectedClient.id === client.id ? "#eef2ff" : "#fff",
-                  borderRadius: 10,
-                  padding: 14,
-                  marginBottom: 10,
-                  cursor: "pointer",
-                  boxShadow:
-                    selectedClient && selectedClient.id === client.id
-                      ? "0 2px 12px #c7d2fe50"
-                      : "0 1px 4px #cbd5e140",
-                  borderLeft: client.status_id ? `6px solid ${theme.border}` : "6px solid transparent",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ fontWeight: 600, fontSize: 16, flex: 1, minWidth: 0 }}>
-                    {client.name || "No Name"}
-                  </div>
-
-                  {!!client.unreadCount && (
-                    <span
-                      style={{
-                        background: "#ef4444",
-                        color: "#fff",
-                        borderRadius: 999,
-                        padding: "2px 8px",
-                        fontSize: 12,
-                        fontWeight: 800,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {client.unreadCount}
-                    </span>
-                  )}
-
-                  {statusName && (
-                    <span
-                      style={{
-                        background: theme.pillBg,
-                        color: theme.pillText,
-                        borderRadius: 999,
-                        padding: "3px 10px",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {statusName}
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ fontSize: 13, color: "#475569", marginTop: 2 }}>
-                  {client.phone || "No phone"}
-                </div>
-
-                <div style={{ marginTop: 8 }}>
-                  <select
-                    className="status-dropdown"
-                    value={client.status_id || ""}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      handleStatusChange(client.id, e.target.value);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      width: "100%",
-                      maxWidth: "100%",
-                      height: 32,
-                      fontSize: 13,
-                      borderRadius: 8,
-                      border: "1px solid #e2e8f0",
-                      padding: "4px 8px",
-                      background: "#fff",
-                    }}
-                  >
-                    <option value="">Select status...</option>
-                    {(Array.isArray(statuses) ? statuses : []).map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
-                  {client.language === "Spanish" ? "Spanish" : "English"}
-                </div>
-
-                {selectedClient && selectedClient.id === client.id && (
-                  <div style={{ marginTop: 8, color: "#555", fontSize: 13 }}>
-                    {client.email && <div>Email: {client.email}</div>}
-                    {client.notes && <div>Notes: {client.notes}</div>}
-                    {client.office && <div>Office: {client.office}</div>}
-                    {client.case_type && <div>Case: {client.case_type}</div>}
-                    {client.appointment_datetime && <div>Appt: {client.appointment_datetime}</div>}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </aside>
-
-      <main
-        className="inbox-main"
-        style={{
-          flex: 1,
-          padding: 32,
+          display: "flex",
           minHeight: 600,
-          height: "100%",
+          height: "calc(100vh - 190px)",
+          maxWidth: 1100,
+          margin: "20px auto",
           overflow: "hidden",
         }}
       >
-        {!selectedClient && (
-          <div
+        <aside
+          className="inbox-sidebar"
+          style={{
+            width: 340,
+            background: "#f8fafc",
+            padding: 18,
+            height: "100%",
+            overflowY: "auto",
+          }}
+        >
+          <h3 style={{ marginTop: 0 }}>Clients</h3>
+          <button
+            onClick={openAddClientForm}
             style={{
-              color: "#64748b",
-              margin: "auto",
-              textAlign: "center",
-              fontSize: 16,
-              fontWeight: 500,
+              width: "100%",
+              marginBottom: 12,
+              background: "#374151",
+              color: "#fff",
+              borderRadius: 8,
+              border: "none",
+              padding: "9px 0",
+              fontWeight: "bold",
+              fontSize: 15,
+              cursor: "pointer",
             }}
           >
-            Select a client to view messages
-          </div>
-        )}
+            Add Client
+          </button>
 
-        {selectedClient && (
-          <>
-            <div className="header-row" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
-              <h2 style={{ margin: 0, fontWeight: 700 }}>
-                Conversation with {selectedClient.name}
-              </h2>
+          <input
+            style={{
+              width: "100%",
+              padding: "8px 10px",
+              marginBottom: 14,
+              borderRadius: 8,
+              border: "1px solid #cbd5e1",
+              fontSize: 14,
+            }}
+            type="text"
+            placeholder="Search by name or phone.."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-              <button
-                className="edit-btn"
-                onClick={openEditClientForm}
-                style={{
-                  marginLeft: "auto",
-                  background: "#818cf8",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "6px 18px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Edit Client
-              </button>
+          <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
+            {filteredClients.map((client) => {
+              const statusName = client.status_id ? getStatusName(client.status_id) : "";
+              const theme = statusThemeByName(statusName);
 
-              <button
-                className="delete-btn"
-                onClick={handleDeleteClient}
-                style={{
-                  background: "#f43f5e",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "6px 18px",
-                  fontWeight: 600,
-                  marginLeft: 10,
-                  cursor: "pointer",
-                }}
-              >
-                Delete Client
-              </button>
-            </div>
+              const isSelected = selectedClient && selectedClient.id === client.id;
+              const isFlashing = highlightClientId === client.id && !isSelected;
 
-            <div
-              className="messages"
-              style={{
-                background: "#f4f7fa",
-                borderRadius: 12,
-                padding: 18,
-                marginBottom: 16,
-                height: "calc(100% - 120px)",
-                overflowY: "auto",
-                boxShadow: "0 1px 4px #e0e7ef",
-              }}
-            >
-              {loadingMessages && <div>Loading messages...</div>}
-              {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
-                <div className="no-messages" style={{ color: "#aaa" }}>
-                  No messages yet!
-                </div>
-              )}
+              return (
+                <li
+                  key={client.id}
+                  className={isSelected ? "selected" : ""}
+                  onClick={() => handleSelectClient(client)}
+                  style={{
+                    background: isSelected ? "#eef2ff" : "#fff",
+                    borderRadius: 10,
+                    padding: 14,
+                    marginBottom: 10,
+                    cursor: "pointer",
+                    boxShadow: isSelected
+                      ? "0 2px 12px #c7d2fe50"
+                      : isFlashing
+                      ? "0 0 0 4px rgba(34,197,94,0.22), 0 10px 30px rgba(34,197,94,0.12)"
+                      : "0 1px 4px #cbd5e140",
+                    transform: isFlashing ? "translateY(-1px)" : "none",
+                    transition: "box-shadow 160ms ease, transform 160ms ease",
+                    borderLeft: client.status_id ? `6px solid ${theme.border}` : "6px solid transparent",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ fontWeight: 600, fontSize: 16, flex: 1, minWidth: 0 }}>
+                      {client.name || "No Name"}
+                    </div>
 
-              {(() => {
-                let lastDate = null;
-
-                return (Array.isArray(messages) ? messages : []).map((msg, i) => {
-                  const msgDate = new Date(msg.timestamp);
-                  const showDate =
-                    !lastDate ||
-                    !(
-                      msgDate.getFullYear() === lastDate.getFullYear() &&
-                      msgDate.getMonth() === lastDate.getMonth() &&
-                      msgDate.getDate() === lastDate.getDate()
-                    );
-                  if (showDate) lastDate = msgDate;
-
-                  const isSystem = msg.sender === "system";
-
-                  return (
-                    <React.Fragment key={i}>
-                      {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
-
-                      <div
-                        className={`message ${
-                          isSystem
-                            ? "system"
-                            : msg.sender === "me" || msg.direction === "outbound"
-                            ? "me"
-                            : "client"
-                        }`}
+                    {!!client.unreadCount && (
+                      <span
                         style={{
-                          background: isSystem ? "#f1f5f9" : undefined,
-                          border: isSystem ? "1px solid #e2e8f0" : undefined,
-                          color: isSystem ? "#6d28d9" : undefined,
-                          padding: isSystem ? "10px 14px" : "7px 16px",
-                          borderRadius: isSystem ? 16 : 10,
-                          margin: "8px 0",
-                          maxWidth: isSystem ? "85%" : undefined,
-                          alignSelf: isSystem ? "flex-start" : undefined,
-                          boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
+                          background: "#ef4444",
+                          color: "#fff",
+                          borderRadius: 999,
+                          padding: "2px 8px",
+                          fontSize: 12,
+                          fontWeight: 800,
+                          lineHeight: 1.4,
                         }}
                       >
-                        <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
-                          {msg.text}
-                        </div>
+                        {client.unreadCount}
+                      </span>
+                    )}
+
+                    {statusName && (
+                      <span
+                        style={{
+                          background: theme.pillBg,
+                          color: theme.pillText,
+                          borderRadius: 999,
+                          padding: "3px 10px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {statusName}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ fontSize: 13, color: "#475569", marginTop: 2 }}>
+                    {client.phone || "No phone"}
+                  </div>
+
+                  <div style={{ marginTop: 8 }}>
+                    <select
+                      className="status-dropdown"
+                      value={client.status_id || ""}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleStatusChange(client.id, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: 32,
+                        fontSize: 13,
+                        borderRadius: 8,
+                        border: "1px solid #e2e8f0",
+                        padding: "4px 8px",
+                        background: "#fff",
+                      }}
+                    >
+                      <option value="">Select status...</option>
+                      {(Array.isArray(statuses) ? statuses : []).map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
+                    {client.language === "Spanish" ? "Spanish" : "English"}
+                  </div>
+
+                  {isSelected && (
+                    <div style={{ marginTop: 8, color: "#555", fontSize: 13 }}>
+                      {client.email && <div>Email: {client.email}</div>}
+                      {client.notes && <div>Notes: {client.notes}</div>}
+                      {client.office && <div>Office: {client.office}</div>}
+                      {client.case_type && <div>Case: {client.case_type}</div>}
+                      {client.appointment_datetime && <div>Appt: {client.appointment_datetime}</div>}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        <main
+          className="inbox-main"
+          style={{
+            flex: 1,
+            padding: 32,
+            minHeight: 600,
+            height: "100%",
+            overflow: "hidden",
+          }}
+        >
+          {!selectedClient && (
+            <div
+              style={{
+                color: "#64748b",
+                margin: "auto",
+                textAlign: "center",
+                fontSize: 16,
+                fontWeight: 500,
+              }}
+            >
+              Select a client to view messages
+            </div>
+          )}
+
+          {selectedClient && (
+            <>
+              <div className="header-row" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
+                <h2 style={{ margin: 0, fontWeight: 700 }}>
+                  Conversation with {selectedClient.name}
+                </h2>
+
+                <button
+                  className="edit-btn"
+                  onClick={openEditClientForm}
+                  style={{
+                    marginLeft: "auto",
+                    background: "#818cf8",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "6px 18px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Edit Client
+                </button>
+
+                <button
+                  className="delete-btn"
+                  onClick={handleDeleteClient}
+                  style={{
+                    background: "#f43f5e",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "6px 18px",
+                    fontWeight: 600,
+                    marginLeft: 10,
+                    cursor: "pointer",
+                  }}
+                >
+                  Delete Client
+                </button>
+              </div>
+
+              <div
+                className="messages"
+                style={{
+                  background: "#f4f7fa",
+                  borderRadius: 12,
+                  padding: 18,
+                  marginBottom: 16,
+                  height: "calc(100% - 120px)",
+                  overflowY: "auto",
+                  boxShadow: "0 1px 4px #e0e7ef",
+                }}
+              >
+                {loadingMessages && <div>Loading messages...</div>}
+                {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
+                  <div className="no-messages" style={{ color: "#aaa" }}>
+                    No messages yet!
+                  </div>
+                )}
+
+                {(() => {
+                  let lastDate = null;
+
+                  return (Array.isArray(messages) ? messages : []).map((msg, i) => {
+                    const msgDate = safeDate(msg.timestamp);
+
+                    const showDate =
+                      !lastDate ||
+                      !(
+                        msgDate.getFullYear() === lastDate.getFullYear() &&
+                        msgDate.getMonth() === lastDate.getMonth() &&
+                        msgDate.getDate() === lastDate.getDate()
+                      );
+                    if (showDate) lastDate = msgDate;
+
+                    const isSystem = msg.sender === "system";
+                    const isOutbound = msg.direction === "outbound" || msg.sender === "me";
+                    const bubbleClass = isSystem ? "system" : isOutbound ? "me" : "client";
+
+                    // ✅ footer label:
+                    // - system: "Automated • 3:15 PM"
+                    // - outbound: "Sent by Cass • 3:15 PM"
+                    // - inbound: "Received • 3:15 PM"
+                    let footer = "";
+                    if (isSystem) {
+                      footer = `Automated • ${format(msgDate, "h:mm a")}`;
+                    } else if (isOutbound) {
+                      const who = prettyName(msg.sender) || "Agent";
+                      footer = `Sent by ${who} • ${format(msgDate, "h:mm a")}`;
+                    } else {
+                      footer = `Received • ${format(msgDate, "h:mm a")}`;
+                    }
+
+                    return (
+                      <React.Fragment key={i}>
+                        {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
 
                         <div
-                          className="message-timestamp"
+                          className={`message ${bubbleClass}`}
                           style={{
-                            marginTop: 6,
-                            fontSize: 11,
-                            opacity: 0.85,
+                            background: isSystem ? "#f1f5f9" : undefined,
+                            border: isSystem ? "1px solid #e2e8f0" : undefined,
                             color: isSystem ? "#6d28d9" : undefined,
+                            padding: isSystem ? "10px 14px" : "7px 16px",
+                            borderRadius: isSystem ? 16 : 10,
+                            margin: "8px 0",
+                            maxWidth: isSystem ? "85%" : undefined,
+                            alignSelf: isSystem ? "flex-start" : undefined,
+                            boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
                           }}
                         >
-                          {format(msgDate, "h:mm a")}
-                          {msg.direction === "outbound" && " • Sent"}
-                          {msg.direction === "inbound" && " • Received"}
-                          {isSystem && " • Automated"}
+                          <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
+                            {msg.text}
+                          </div>
+
+                          <div
+                            className="message-timestamp"
+                            style={{
+                              marginTop: 6,
+                              fontSize: 11,
+                              opacity: 0.85,
+                              color: isSystem ? "#6d28d9" : undefined,
+                            }}
+                          >
+                            {footer}
+                          </div>
                         </div>
-                      </div>
-                    </React.Fragment>
-                  );
-                });
-              })()}
+                      </React.Fragment>
+                    );
+                  });
+                })()}
 
-              {typing && (
-                <div className="typing-indicator" style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>
-                  You are typing...
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                {typing && (
+                  <div className="typing-indicator" style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>
+                    You are typing...
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
 
-            <form className="message-input-row" onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
-              <input
-                type="text"
-                placeholder="Type your message..."
-                value={newMsg}
-                onChange={(e) => setNewMsg(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: 13,
-                  borderRadius: 19,
-                  border: "1px solid #bfc8da",
-                  fontSize: 15,
-                  outline: "none",
-                }}
-                disabled={!selectedClient}
-              />
-              <button
-                type="submit"
-                style={{
-                  padding: "0 24px",
-                  borderRadius: 19,
-                  border: "none",
-                  background: "#6366f1",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  cursor: "pointer",
-                  opacity: !newMsg.trim() ? 0.7 : 1,
-                }}
-                disabled={!newMsg.trim()}
-              >
-                Send
-              </button>
-            </form>
-          </>
+              <form className="message-input-row" onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={newMsg}
+                  onChange={(e) => setNewMsg(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: 13,
+                    borderRadius: 19,
+                    border: "1px solid #bfc8da",
+                    fontSize: 15,
+                    outline: "none",
+                  }}
+                  disabled={!selectedClient}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    padding: "0 24px",
+                    borderRadius: 19,
+                    border: "none",
+                    background: "#6366f1",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    cursor: "pointer",
+                    opacity: !newMsg.trim() ? 0.7 : 1,
+                  }}
+                  disabled={!newMsg.trim()}
+                >
+                  Send
+                </button>
+              </form>
+            </>
+          )}
+        </main>
+
+        {showClientForm && (
+          <ClientForm
+            initialData={editClientData || {}}
+            onClose={() => setShowClientForm(false)}
+            onSave={handleClientSave}
+          />
         )}
-      </main>
-
-      {showClientForm && (
-        <ClientForm
-          initialData={editClientData || {}}
-          onClose={() => setShowClientForm(false)}
-          onSave={handleClientSave}
-        />
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
