@@ -76,8 +76,10 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [apptDate, setApptDate] = useState(initialData.appt_date || "");
   const [apptTime, setApptTime] = useState(initialData.appt_time || "");
 
-  const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
-  const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || "");
+const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
+const [ic, setIc] = useState(initialData.ic || ""); // ✅ THIS is the sheet I.C.
+const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || ""); // optional separate field
+
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
@@ -108,21 +110,23 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           "Content-Type": "application/json",
           Authorization: "Bearer " + localStorage.getItem("token"),
         },
-        body: JSON.stringify({
-          name: cleanName,
-          phone: cleanPhone,
-          email,
-          notes,
-          language,
-          office,
-          case_type: caseType,
-          case_subtype: caseSubtype,
-          appt_date: apptDate,
-          appt_time: apptTime,
-          appt_setter: apptSetter,
-          intake_coordinator: intakeCoordinator,
-        }),
-      });
+     body: JSON.stringify({
+  name: cleanName,
+  phone: cleanPhone,
+  email,
+  notes,
+  language,
+  office,
+
+  appt_setter: apptSetter,
+  ic,                     // ✅ I.C. → maps to DB column `ic`
+
+  appt_date: apptDate,    // ✅ split date
+  appt_time: apptTime,    // ✅ split time
+
+  case_type: caseType,    // ✅ Criminal / Immigration / Bankruptcy
+  case_subtype: caseSubtype, // ✅ CI - Criminal Investigation, etc.
+}),
 
       const data = await response.json().catch(() => null);
 
@@ -159,7 +163,11 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 
         <div className="cc-row">
           <input className="cc-field" placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} />
-          <input className="cc-field" placeholder="I.C." value={intakeCoordinator} onChange={(e) => setIntakeCoordinator(e.target.value)} />
+         <input
+  placeholder="I.C."
+  value={ic}
+  onChange={(e) => setIc(e.target.value)}
+/>
         </div>
 
         <div className="cc-row">
