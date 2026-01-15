@@ -409,12 +409,13 @@ function Inbox() {
     if (!newMsg.trim()) return alert("Type a message first.");
     if (!selectedClient) return alert("No client selected.");
 
-    const payload = {
-      to: selectedClient.phone,
-      text: newMsg,
-      client_id: selectedClient.id,
-      user_id: authUser.id,
-    };
+ const payload = {
+  to: selectedClient.phone,
+  text: newMsg,
+  client_id: selectedClient.id,
+  user_id: authUser.id, // <-- add this
+};
+
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/send`, {
