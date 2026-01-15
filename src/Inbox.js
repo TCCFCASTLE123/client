@@ -121,31 +121,17 @@ if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
     try {
       setSaving(true);
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-     body: JSON.stringify({
-  name: cleanName,
-  phone: cleanPhone,
-  email,
-  notes,
-  language,
-  office,
-
-  appt_setter: apptSetter,
-  ic,                     // ✅ I.C. → maps to DB column `ic`
-
-  appt_date: apptDate,    // ✅ split date
-  appt_time: apptTime,    // ✅ split time
-
-  case_type: caseType,    // ✅ Criminal / Immigration / Bankruptcy
-  case_subtype: caseSubtype, // ✅ CI - Criminal Investigation, etc.
-}),
+    const response = await fetch(url, {
+  method,
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + localStorage.getItem("token"),
+  },
+  body: JSON.stringify(payload),
 });
-      const data = await response.json().catch(() => null);
+
+const data = await response.json().catch(() => null);
+
 
       if (!response.ok) {
         setErrMsg((data && data.error) || "Failed to save client.");
