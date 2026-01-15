@@ -1,3 +1,4 @@
+// Inbox.js
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { io } from "socket.io-client";
@@ -56,13 +57,22 @@ function playBeep() {
   } catch {}
 }
 
-// =========================
-// ClientForm Component
-// =========================
-// =========================
-// ClientForm Component (UPDATED)
-// =========================
+/** =========================
+ * Shared auth helpers
+ * ========================= */
+function getToken() {
+  return localStorage.getItem("token") || "";
+}
 
+function redirectToLogin() {
+  localStorage.removeItem("token");
+  // Change this if your login route is different:
+  window.location.href = "/login";
+}
+
+/** =========================
+ * ClientForm
+ * ========================= */
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
   const [phone, setPhone] = useState(initialData.phone || "");
@@ -76,10 +86,9 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [apptDate, setApptDate] = useState(initialData.appt_date || "");
   const [apptTime, setApptTime] = useState(initialData.appt_time || "");
 
-const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
-const [ic, setIc] = useState(initialData.ic || ""); // ✅ THIS is the sheet I.C.
-const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || ""); // optional separate field
-
+  const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
+  const [ic, setIc] = useState(initialData.ic || "");
+  const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || "");
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
@@ -100,41 +109,52 @@ const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_co
     const url = initialData.id
       ? `${process.env.REACT_APP_API_URL}/api/clients/${initialData.id}`
       : `${process.env.REACT_APP_API_URL}/api/clients`;
-// Build payload WITHOUT blank overwrites
-const payload = {};
 
-// keep required fields (whatever your form state variables are)
-if (name && name.trim()) payload.name = name.trim();
-if (phone && phone.trim()) payload.phone = phone.trim();
+    // Build payload WITHOUT blank overwrites
+    const payload = {};
 
-// appointment strings (Option A)
-if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim();
-if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
+    // required
+    if (cleanName) payload.name = cleanName;
+    if (cleanPhone) payload.phone = cleanPhone;
 
-// add any other optional fields the same way:
-// if (caseType && caseType.trim()) payload.case_type = caseType.trim();
-// if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
-// if (ic && ic.trim()) payload.ic = ic.trim();
-// if (intakeCoordinator && intakeCoordinator.trim()) payload.intake_coordinator = intakeCoordinator.trim();
-// if (statusText && statusText.trim()) payload.status_text = statusText.trim();
+    // optional (only if nonblank)
+    if (email && email.trim()) payload.email = email.trim();
+    if (notes && notes.trim()) payload.notes = notes.trim();
+    if (language && language.trim()) payload.language = language.trim();
+    if (office && office.trim()) payload.office = office.trim();
+
+    if (caseType && caseType.trim()) payload.case_type = caseType.trim();
+    if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
+
+    if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim(); // YYYY-MM-DD
+    if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim(); // h:mm A
+
+    if (apptSetter && apptSetter.trim()) payload.appt_setter = apptSetter.trim();
+    if (ic && ic.trim()) payload.ic = ic.trim();
+    if (intakeCoordinator && intakeCoordinator.trim()) payload.intake_coordinator = intakeCoordinator.trim();
 
     try {
       setSaving(true);
 
-    const response = await fetch(url, {
-  method,
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: "Bearer " + localStorage.getItem("token"),
-  },
-  body: JSON.stringify(payload),
-});
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + getToken(),
+        },
+        body: JSON.stringify(payload),
+      });
 
-const data = await response.json().catch(() => null);
+      if (response.status === 401 || response.status === 403) {
+        setSaving(false);
+        redirectToLogin();
+        return;
+      }
 
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setErrMsg((data && data.error) || "Failed to save client.");
+        setErrMsg((data && (data.error || data.message)) || "Failed to save client.");
         setSaving(false);
         return;
       }
@@ -161,23 +181,18 @@ const data = await response.json().catch(() => null);
 
         <div className="cc-row">
           <input className="cc-field" type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} />
-     <input
-  className="cc-field"
-  type="text"
-  value={apptTime || ""}
-  onChange={(e) => setApptTime(e.target.value)}
-  placeholder="6:00 PM"
-/>
-
+          <input
+            className="cc-field"
+            type="text"
+            value={apptTime || ""}
+            onChange={(e) => setApptTime(e.target.value)}
+            placeholder="6:00 PM"
+          />
         </div>
 
         <div className="cc-row">
           <input className="cc-field" placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} />
-         <input
-  placeholder="I.C."
-  value={ic}
-  onChange={(e) => setIc(e.target.value)}
-/>
+          <input className="cc-field" placeholder="I.C." value={ic} onChange={(e) => setIc(e.target.value)} />
         </div>
 
         <div className="cc-row">
@@ -224,10 +239,9 @@ const data = await response.json().catch(() => null);
   );
 }
 
-
-// =========================
-// Inbox Component
-// =========================
+/** =========================
+ * Inbox Component
+ * ========================= */
 function Inbox() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
@@ -250,55 +264,87 @@ function Inbox() {
     }
   }, []);
 
-  // Load statuses + clients (keep your fetch, but preserve unread counts)
+  // ✅ Load statuses + clients (401-safe + array-safe)
   useEffect(() => {
-    fetch(process.env.REACT_APP_API_URL + "/api/statuses")
-      .then((res) => res.json())
-      .then(setStatuses)
-      .catch((err) => alert(err.message));
+    let cancelled = false;
 
-    const fetchClients = () => {
-      fetch(process.env.REACT_APP_API_URL + "/api/clients", {
-        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-      })
-        .then((res) => res.json())
-        .then((fresh) => {
-          setClients((prev) => {
-            // preserve unreadCount + lastMessageAt/text from current state
-            const prevById = new Map(prev.map((c) => [c.id, c]));
-            const merged = fresh.map((c) => {
-              const old = prevById.get(c.id);
-              return {
-                ...c,
-                unreadCount: old?.unreadCount || 0,
-                lastMessageAt: old?.lastMessageAt || null,
-                lastMessageText: old?.lastMessageText || "",
-              };
-            });
+    async function loadStatuses() {
+      try {
+        const res = await fetch(process.env.REACT_APP_API_URL + "/api/statuses", {
+          headers: { Authorization: "Bearer " + getToken() },
+        });
 
-            // sort by lastMessageAt if we have it (socket will populate it)
-            merged.sort((a, b) => {
-              const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
-              const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
-              return tb - ta;
-            });
+        if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
+          return;
+        }
 
-            return merged;
+        const data = await res.json().catch(() => []);
+        const list = Array.isArray(data) ? data : Array.isArray(data?.statuses) ? data.statuses : [];
+
+        if (!cancelled) setStatuses(list);
+      } catch (err) {
+        if (!cancelled) alert(err.message);
+      }
+    }
+
+    async function fetchClientsOnce() {
+      try {
+        const res = await fetch(process.env.REACT_APP_API_URL + "/api/clients", {
+          headers: { Authorization: "Bearer " + getToken() },
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
+          return;
+        }
+
+        const data = await res.json().catch(() => []);
+        const fresh = Array.isArray(data) ? data : Array.isArray(data?.clients) ? data.clients : [];
+
+        if (cancelled) return;
+
+        setClients((prev) => {
+          const prevById = new Map((Array.isArray(prev) ? prev : []).map((c) => [c.id, c]));
+          const merged = fresh.map((c) => {
+            const old = prevById.get(c.id);
+            return {
+              ...c,
+              unreadCount: old?.unreadCount || 0,
+              lastMessageAt: old?.lastMessageAt || null,
+              lastMessageText: old?.lastMessageText || "",
+            };
           });
-        })
-        .catch((err) => alert(err.message));
-    };
 
-    fetchClients();
-    const intervalId = setInterval(fetchClients, 10000);
-    return () => clearInterval(intervalId);
+          merged.sort((a, b) => {
+            const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+            const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+            return tb - ta;
+          });
+
+          return merged;
+        });
+      } catch (err) {
+        if (!cancelled) alert(err.message);
+      }
+    }
+
+    loadStatuses();
+    fetchClientsOnce();
+
+    const intervalId = setInterval(fetchClientsOnce, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
   }, []);
 
   // ✅ SOCKET: listen for new messages + move client to top + notify
   useEffect(() => {
     const socket = io(process.env.REACT_APP_API_URL, {
       transports: ["websocket"],
-      auth: { token: localStorage.getItem("token") }, // ok even if backend ignores it
+      auth: { token: getToken() }, // ok even if backend ignores it
     });
 
     const onAnyMessage = (msg) => {
@@ -307,19 +353,17 @@ function Inbox() {
       const msgClientId = msg.client_id;
       if (!msgClientId) return;
 
-      const isInbound =
-        msg.direction === "inbound" || msg.sender === "client";
-
+      const isInbound = msg.direction === "inbound" || msg.sender === "client";
       const isViewingThisChat = selectedClientId === msgClientId;
 
       // if we are viewing this client, append to messages live
       if (isViewingThisChat) {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => [...(Array.isArray(prev) ? prev : []), msg]);
       }
 
       // update client list: move to top + unread counts
       setClients((prev) => {
-        const next = [...prev];
+        const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === msgClientId);
         if (idx === -1) return prev;
 
@@ -328,10 +372,7 @@ function Inbox() {
           ...old,
           lastMessageAt: msg.timestamp || new Date().toISOString(),
           lastMessageText: msg.text || "",
-          unreadCount:
-            isInbound && !isViewingThisChat
-              ? (old.unreadCount || 0) + 1
-              : (old.unreadCount || 0),
+          unreadCount: isInbound && !isViewingThisChat ? (old.unreadCount || 0) + 1 : old.unreadCount || 0,
         };
 
         next.splice(idx, 1);
@@ -353,7 +394,6 @@ function Inbox() {
       }
     };
 
-    // listen to common event names (in case backend differs)
     socket.on("newMessage", onAnyMessage);
     socket.on("message", onAnyMessage);
     socket.on("message:new", onAnyMessage);
@@ -366,25 +406,56 @@ function Inbox() {
     };
   }, [selectedClientId]);
 
-  // fetch messages when selecting a client
+  // ✅ fetch messages when selecting a client (401-safe + array-safe)
   useEffect(() => {
-    if (selectedClient) {
+    let cancelled = false;
+
+    async function loadConversation() {
+      if (!selectedClient) {
+        setMessages([]);
+        return;
+      }
+
       setLoadingMessages(true);
-      fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data);
+
+      try {
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`,
+          {
+            headers: { Authorization: "Bearer " + getToken() },
+          }
+        );
+
+        if (res.status === 401 || res.status === 403) {
+          if (!cancelled) {
+            setMessages([]);
+            setLoadingMessages(false);
+          }
+          redirectToLogin();
+          return;
+        }
+
+        const data = await res.json().catch(() => null);
+        const list = Array.isArray(data) ? data : Array.isArray(data?.messages) ? data.messages : [];
+
+        if (!cancelled) {
+          setMessages(list);
           setLoadingMessages(false);
-        })
-        .catch((err) => {
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setMessages([]);
+          setLoadingMessages(false);
           alert(err.message);
-          setLoadingMessages(false);
-        });
-    } else {
-      setMessages([]);
+        }
+      }
     }
+
+    loadConversation();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedClient]);
 
   // scroll to bottom on new messages
@@ -409,27 +480,32 @@ function Inbox() {
     if (!newMsg.trim()) return alert("Type a message first.");
     if (!selectedClient) return alert("No client selected.");
 
- const payload = {
-  to: selectedClient.phone,
-  text: newMsg,
-  client_id: selectedClient.id,
-};
-
+    const payload = {
+      to: selectedClient.phone,
+      text: newMsg,
+      client_id: selectedClient.id,
+    };
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
+          Authorization: "Bearer " + getToken(),
         },
         body: JSON.stringify(payload),
       });
+
+      if (response.status === 401 || response.status === 403) {
+        redirectToLogin();
+        return;
+      }
+
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
       // move this client to top immediately like a phone
       setClients((prev) => {
-        const next = [...prev];
+        const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === selectedClient.id);
         if (idx === -1) return prev;
 
@@ -445,15 +521,21 @@ function Inbox() {
         return next;
       });
 
-      // keep your existing conversation refresh (safe)
-      await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data);
-          if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        });
+      // refresh conversation (401-safe + array-safe)
+      const res2 = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
+        headers: { Authorization: "Bearer " + getToken() },
+      });
+
+      if (res2.status === 401 || res2.status === 403) {
+        redirectToLogin();
+        return;
+      }
+
+      const data2 = await res2.json().catch(() => null);
+      const list2 = Array.isArray(data2) ? data2 : Array.isArray(data2?.messages) ? data2.messages : [];
+      setMessages(list2);
+
+      if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 
       setNewMsg("");
     } catch (err) {
@@ -466,6 +548,7 @@ function Inbox() {
     setEditClientData(null);
     setShowClientForm(true);
   };
+
   const openEditClientForm = () => {
     setEditClientData(selectedClient);
     setShowClientForm(true);
@@ -473,23 +556,32 @@ function Inbox() {
 
   const handleClientSave = (savedClient) => {
     if (editClientData) {
-      setClients((prev) => prev.map((c) => (c.id === savedClient.id ? savedClient : c)));
+      setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === savedClient.id ? savedClient : c)));
       setSelectedClient(savedClient);
     } else {
-      setClients((prev) => [savedClient, ...prev]);
+      setClients((prev) => [savedClient, ...(Array.isArray(prev) ? prev : [])]);
     }
     setShowClientForm(false);
   };
 
   const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+
     if (window.confirm(`Delete client "${selectedClient.name}" and all messages?`)) {
       try {
         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/clients/${selectedClient.id}`, {
           method: "DELETE",
-          headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+          headers: { Authorization: "Bearer " + getToken() },
         });
+
+        if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
+          return;
+        }
+
         if (!res.ok) throw new Error("Failed to delete client");
-        setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
+
+        setClients((prev) => (Array.isArray(prev) ? prev : []).filter((c) => c.id !== selectedClient.id));
         setSelectedClient(null);
         setMessages([]);
       } catch (err) {
@@ -503,16 +595,21 @@ function Inbox() {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer " + localStorage.getItem("token"),
+        Authorization: "Bearer " + getToken(),
       },
       body: JSON.stringify({ status_id: statusId }),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (res.status === 401 || res.status === 403) {
+          redirectToLogin();
+          return { success: false };
+        }
+        const data = await res.json().catch(() => ({ success: false }));
+        return data;
+      })
       .then((data) => {
-        if (data.success) {
-          setClients((clients) =>
-            clients.map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c))
-          );
+        if (data && data.success) {
+          setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c)));
           if (selectedClient && selectedClient.id === clientId) {
             setSelectedClient({ ...selectedClient, status_id: statusId });
           }
@@ -524,12 +621,14 @@ function Inbox() {
   };
 
   const getStatusName = (statusId) => {
-    const found = statuses.find((s) => String(s.id) === String(statusId));
+    const list = Array.isArray(statuses) ? statuses : [];
+    const found = list.find((s) => String(s.id) === String(statusId));
     return found ? found.name : "";
   };
 
   const filteredClients = useMemo(() => {
-    return clients.filter(
+    const list = Array.isArray(clients) ? clients : [];
+    return list.filter(
       (c) =>
         !search ||
         (c.name && c.name.toLowerCase().includes(search.toLowerCase())) ||
@@ -540,9 +639,7 @@ function Inbox() {
   const handleSelectClient = (client) => {
     setSelectedClient(client);
     // clear unread when opening the chat
-    setClients((prev) =>
-      prev.map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c))
-    );
+    setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
   };
 
   return (
@@ -629,7 +726,6 @@ function Inbox() {
                     {client.name || "No Name"}
                   </div>
 
-                  {/* unread badge */}
                   {!!client.unreadCount && (
                     <span
                       style={{
@@ -688,7 +784,7 @@ function Inbox() {
                     }}
                   >
                     <option value="">Select status...</option>
-                    {statuses.map((status) => (
+                    {(Array.isArray(statuses) ? statuses : []).map((status) => (
                       <option key={status.id} value={status.id}>
                         {status.name}
                       </option>
@@ -725,20 +821,19 @@ function Inbox() {
           overflow: "hidden",
         }}
       >
-    {!selectedClient && (
-  <div
-    style={{
-      color: "#64748b",
-      margin: "auto",
-      textAlign: "center",
-      fontSize: 16,
-      fontWeight: 500,
-    }}
-  >
-    Select a client to view messages
-  </div>
-)}
-
+        {!selectedClient && (
+          <div
+            style={{
+              color: "#64748b",
+              margin: "auto",
+              textAlign: "center",
+              fontSize: 16,
+              fontWeight: 500,
+            }}
+          >
+            Select a client to view messages
+          </div>
+        )}
 
         {selectedClient && (
           <>
@@ -795,7 +890,7 @@ function Inbox() {
               }}
             >
               {loadingMessages && <div>Loading messages...</div>}
-              {!loadingMessages && messages.length === 0 && (
+              {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
                 <div className="no-messages" style={{ color: "#aaa" }}>
                   No messages yet!
                 </div>
@@ -803,7 +898,8 @@ function Inbox() {
 
               {(() => {
                 let lastDate = null;
-                return messages.map((msg, i) => {
+
+                return (Array.isArray(messages) ? messages : []).map((msg, i) => {
                   const msgDate = new Date(msg.timestamp);
                   const showDate =
                     !lastDate ||
