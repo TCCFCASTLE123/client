@@ -127,7 +127,7 @@ const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_co
   case_type: caseType,    // ✅ Criminal / Immigration / Bankruptcy
   case_subtype: caseSubtype, // ✅ CI - Criminal Investigation, etc.
 }),
-
+});
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
