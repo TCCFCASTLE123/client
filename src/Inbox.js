@@ -100,6 +100,23 @@ const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_co
     const url = initialData.id
       ? `${process.env.REACT_APP_API_URL}/api/clients/${initialData.id}`
       : `${process.env.REACT_APP_API_URL}/api/clients`;
+// Build payload WITHOUT blank overwrites
+const payload = {};
+
+// keep required fields (whatever your form state variables are)
+if (name && name.trim()) payload.name = name.trim();
+if (phone && phone.trim()) payload.phone = phone.trim();
+
+// appointment strings (Option A)
+if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim();
+if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
+
+// add any other optional fields the same way:
+// if (caseType && caseType.trim()) payload.case_type = caseType.trim();
+// if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
+// if (ic && ic.trim()) payload.ic = ic.trim();
+// if (intakeCoordinator && intakeCoordinator.trim()) payload.intake_coordinator = intakeCoordinator.trim();
+// if (statusText && statusText.trim()) payload.status_text = statusText.trim();
 
     try {
       setSaving(true);
@@ -158,7 +175,14 @@ const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_co
 
         <div className="cc-row">
           <input className="cc-field" type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} />
-          <input className="cc-field" type="time" value={apptTime} onChange={(e) => setApptTime(e.target.value)} />
+     <input
+  className="cc-field"
+  type="text"
+  value={apptTime || ""}
+  onChange={(e) => setApptTime(e.target.value)}
+  placeholder="6:00 PM"
+/>
+
         </div>
 
         <div className="cc-row">
