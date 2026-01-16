@@ -31,9 +31,14 @@ export default function ClientsPage() {
   const [caseType, setCaseType] = useState("");
   const [language, setLanguage] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [sortBy, setSortBy] = useState("recent"); // recent | name
-const [icFilter, setIcFilter] = useState("all");
-const [apptSetterFilter, setApptSetterFilter] = useState("all");
+
+  // NEW filters
+  const [icFilter, setIcFilter] = useState("all");
+  const [apptSetterFilter, setApptSetterFilter] = useState("all");
+
+  // Sort
+  // recent | name | case_type | ic | appt_setter
+  const [sortBy, setSortBy] = useState("recent");
 
   useEffect(() => {
     let cancelled = false;
@@ -50,7 +55,12 @@ const [apptSetterFilter, setApptSetterFilter] = useState("all");
           }),
         ]);
 
-        if (sRes.status === 401 || sRes.status === 403 || cRes.status === 401 || cRes.status === 403) {
+        if (
+          sRes.status === 401 ||
+          sRes.status === 403 ||
+          cRes.status === 401 ||
+          cRes.status === 403
+        ) {
           redirectToLogin();
           return;
         }
@@ -58,10 +68,20 @@ const [apptSetterFilter, setApptSetterFilter] = useState("all");
         const sJson = await sRes.json().catch(() => []);
         const cJson = await cRes.json().catch(() => []);
 
-        const statusList = Array.isArray(sJson) ? sJson : Array.isArray(sJson?.statuses) ? sJson.statuses : [];
-        const clientList = Array.isArray(cJson) ? cJson : Array.isArray(cJson?.clients) ? cJson.clients : [];
+        const statusList = Array.isArray(sJson)
+          ? sJson
+          : Array.isArray(sJson?.statuses)
+          ? sJson.statuses
+          : [];
+
+        const clientList = Array.isArray(cJson)
+          ? cJson
+          : Array.isArray(cJson?.clients)
+          ? cJson.clients
+          : [];
 
         if (cancelled) return;
+
         setStatuses(statusList);
         setClients(clientList);
         setLoading(false);
@@ -82,7 +102,9 @@ const [apptSetterFilter, setApptSetterFilter] = useState("all");
 
   const statusNameById = useMemo(() => {
     const m = new Map();
-    (Array.isArray(statuses) ? statuses : []).forEach((s) => m.set(String(s.id), s.name));
+    (Array.isArray(statuses) ? statuses : []).forEach((s) =>
+      m.set(String(s.id), s.name)
+    );
     return m;
   }, [statuses]);
 
@@ -104,31 +126,35 @@ const [apptSetterFilter, setApptSetterFilter] = useState("all");
     return Array.from(set).sort();
   }, [clients]);
 
+  // ✅ NEW: IC + appt setter dropdown values
+  const icOptions = useMemo(() => {
+    const set = new Set();
+    (Array.isArray(clients) ? clients : []).forEach((c) => {
+      if (c.ic) set.add(String(c.ic).trim());
+    });
+    return Array.from(set).filter(Boolean).sort();
+  }, [clients]);
+
+  const apptSetterOptions = useMemo(() => {
+    const set = new Set();
+    (Array.isArray(clients) ? clients : []).forEach((c) => {
+      if (c.appt_setter) set.add(String(c.appt_setter).trim());
+    });
+    return Array.from(set).filter(Boolean).sort();
+  }, [clients]);
+
   const filtered = useMemo(() => {
     const list = Array.isArray(clients) ? clients : [];
-    const needle = (q || "").trim().toLowerCase().replace(/\D/g, (m) => m);
-const icOptions = useMemo(() => {
-  const set = new Set();
-  (clients || []).forEach(c => c.ic && set.add(c.ic));
-  return Array.from(set).sort();
-}, [clients]);
-
-const apptSetterOptions = useMemo(() => {
-  const set = new Set();
-  (clients || []).forEach(c => c.appt_setter && set.add(c.appt_setter));
-  return Array.from(set).sort();
-}, [clients]);
+    const qLower = (q || "").trim().toLowerCase();
+    const qDigits = (q || "").replace(/\D/g, "");
 
     let out = list.filter((c) => {
       // search
-      if (q && q.trim()) {
+      if (qLower) {
         const name = (c.name || "").toLowerCase();
         const phone = (c.phone || "").replace(/\D/g, "");
         const email = (c.email || "").toLowerCase();
         const notes = (c.notes || "").toLowerCase();
-
-        const qLower = q.toLowerCase();
-        const qDigits = q.replace(/\D/g, "");
 
         const matches =
           name.includes(qLower) ||
@@ -144,9 +170,9 @@ const apptSetterOptions = useMemo(() => {
       if (office && String(c.office || "") !== String(office)) return false;
       if (caseType && String(c.case_type || "") !== String(caseType)) return false;
       if (language && String(c.language || "") !== String(language)) return false;
-if (icFilter !== "all" && c.ic !== icFilter) return false;
-if (apptSetterFilter !== "all" && c.appt_setter !== apptSetterFilter) return false;
 
+      if (icFilter !== "all" && String(c.ic || "").trim() !== icFilter) return false;
+      if (apptSetterFilter !== "all" && String(c.appt_setter || "").trim() !== apptSetterFilter) return false;
 
       if (unreadOnly) {
         const unread = Number(c.unreadCount || 0);
@@ -157,16 +183,29 @@ if (apptSetterFilter !== "all" && c.appt_setter !== apptSetterFilter) return fal
     });
 
     // sort
-    if (sortBy === "name") {
-      out.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
-    } else {
-      out.sort((a, b) => safeTime(b.last_message_at || b.lastMessageAt) - safeTime(a.last_message_at || a.lastMessageAt));
-    }
-if (sort === "ic") return (a.ic || "").localeCompare(b.ic || "");
-if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_setter || "");
+    out.sort((a, b) => {
+      if (sortBy === "name") {
+        return String(a.name || "").localeCompare(String(b.name || ""));
+      }
+      if (sortBy === "case_type") {
+        return String(a.case_type || "").localeCompare(String(b.case_type || ""));
+      }
+      if (sortBy === "ic") {
+        return String(a.ic || "").localeCompare(String(b.ic || ""));
+      }
+      if (sortBy === "appt_setter") {
+        return String(a.appt_setter || "").localeCompare(String(b.appt_setter || ""));
+      }
+
+      // default = most recent
+      return (
+        safeTime(b.last_message_at || b.lastMessageAt) -
+        safeTime(a.last_message_at || a.lastMessageAt)
+      );
+    });
 
     return out;
-  }, [clients, q, statusId, office, caseType, language, unreadOnly, sortBy]);
+  }, [clients, q, statusId, office, caseType, language, unreadOnly, icFilter, apptSetterFilter, sortBy]);
 
   const resetFilters = () => {
     setQ("");
@@ -175,6 +214,8 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
     setCaseType("");
     setLanguage("");
     setUnreadOnly(false);
+    setIcFilter("all");
+    setApptSetterFilter("all");
     setSortBy("recent");
   };
 
@@ -269,8 +310,6 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
               </option>
             ))}
           </select>
-<option value="ic">IC</option>
-<option value="appt_setter">Appt Setter</option>
 
           <select
             value={caseType}
@@ -284,15 +323,6 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
               </option>
             ))}
           </select>
-<select value={icFilter} onChange={(e) => setIcFilter(e.target.value)}>
-  <option value="all">IC (all)</option>
-  {icOptions.map(v => <option key={v} value={v}>{v}</option>)}
-</select>
-
-<select value={apptSetterFilter} onChange={(e) => setApptSetterFilter(e.target.value)}>
-  <option value="all">Appt Setter (all)</option>
-  {apptSetterOptions.map(v => <option key={v} value={v}>{v}</option>)}
-</select>
 
           <select
             value={language}
@@ -308,7 +338,34 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
           </select>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 10, flexWrap: "wrap" }}>
+        {/* second filter row */}
+        <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <select
+            value={icFilter}
+            onChange={(e) => setIcFilter(e.target.value)}
+            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
+          >
+            <option value="all">IC (all)</option>
+            {icOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={apptSetterFilter}
+            onChange={(e) => setApptSetterFilter(e.target.value)}
+            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
+          >
+            <option value="all">Appt Setter (all)</option>
+            {apptSetterOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 900, color: "#0f172a" }}>
             <input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} />
             Unread only
@@ -319,10 +376,13 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              style={{ height: 36, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
+              style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
             >
               <option value="recent">Most recent</option>
               <option value="name">Name</option>
+              <option value="case_type">Case Type</option>
+              <option value="ic">IC</option>
+              <option value="appt_setter">Appt Setter</option>
             </select>
           </div>
         </div>
@@ -362,6 +422,8 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
                   <th style={th}>Status</th>
                   <th style={th}>Office</th>
                   <th style={th}>Case</th>
+                  <th style={th}>IC</th>
+                  <th style={th}>Appt Setter</th>
                   <th style={th}>Language</th>
                   <th style={thCenter}>Unread</th>
                 </tr>
@@ -385,6 +447,8 @@ if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_se
                       <td style={td}>{statusName || "-"}</td>
                       <td style={td}>{c.office || "-"}</td>
                       <td style={td}>{c.case_type || "-"}</td>
+                      <td style={td}>{c.ic || "-"}</td>
+                      <td style={td}>{c.appt_setter || "-"}</td>
                       <td style={td}>{c.language || "-"}</td>
                       <td style={tdCenter}>{unread ? unread : ""}</td>
                     </tr>
