@@ -448,6 +448,19 @@ function Inbox() {
         if (!cancelled) alert(err.message);
       }
     }
+useEffect(() => {
+  if (!clientIdFromUrl) return;
+  if (!Array.isArray(clients) || clients.length === 0) return;
+
+  // if already selected, do nothing
+  if (selectedClient?.id === clientIdFromUrl) return;
+
+  const target = clients.find((c) => c.id === clientIdFromUrl);
+  if (target) {
+    handleSelectClient(target); // uses your existing logic + clears unread
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [clientIdFromUrl, clients]);
 
     loadStatuses();
     fetchClientsOnce();
