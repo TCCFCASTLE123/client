@@ -13,8 +13,40 @@ function redirectToLogin() {
 
 function safeTime(ts) {
   const d = ts ? new Date(ts) : null;
-  const t = d && !isNaN(d.getTime()) ? d.getTime() : 0;
-  return t;
+  return d && !isNaN(d.getTime()) ? d.getTime() : 0;
+}
+
+function canonicalPhone(input) {
+  const digits = String(input || "").replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) return digits.slice(1);
+  return digits;
+}
+
+function formatPhone10(raw) {
+  const d = canonicalPhone(raw);
+  if (d.length !== 10) return raw || "";
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
+function statusThemeByName(nameRaw) {
+  const name = String(nameRaw || "").trim();
+
+  const MAP = {
+    "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
+    "Set": { border: "#cbd5e1", pillBg: "#f1f5f9", pillText: "#334155" },
+    "Attempted/Unsuccessful": { border: "#55c7da", pillBg: "#d9f6fb", pillText: "#0b5c6a" },
+    "Working To Set": { border: "#a78bfa", pillBg: "#ede9fe", pillText: "#5b21b6" },
+    "Showed": { border: "#94a3b8", pillBg: "#e2e8f0", pillText: "#475569" },
+    "Did Not Retain": { border: "#f59e0b", pillBg: "#ffedd5", pillText: "#92400e" },
+    "No Money": { border: "#6b7280", pillBg: "#e5e7eb", pillText: "#374151" },
+    "Retained": { border: "#22c55e", pillBg: "#dcfce7", pillText: "#166534" },
+    "Pending": { border: "#fbbf24", pillBg: "#fef9c3", pillText: "#854d0e" },
+    "Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
+    "Seen Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
+    "Referred Out": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
+  };
+
+  return MAP[name] || { border: "#e2e8f0", pillBg: "#f1f5f9", pillText: "#334155" };
 }
 
 export default function ClientsPage() {
@@ -31,13 +63,10 @@ export default function ClientsPage() {
   const [caseType, setCaseType] = useState("");
   const [language, setLanguage] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
-
-  // NEW filters
   const [icFilter, setIcFilter] = useState("all");
   const [apptSetterFilter, setApptSetterFilter] = useState("all");
 
-  // Sort
-  // recent | name | case_type | ic | appt_setter
+  // Sort: recent | name | case_type | ic | appt_setter
   const [sortBy, setSortBy] = useState("recent");
 
   useEffect(() => {
@@ -102,9 +131,7 @@ export default function ClientsPage() {
 
   const statusNameById = useMemo(() => {
     const m = new Map();
-    (Array.isArray(statuses) ? statuses : []).forEach((s) =>
-      m.set(String(s.id), s.name)
-    );
+    (Array.isArray(statuses) ? statuses : []).forEach((s) => m.set(String(s.id), s.name));
     return m;
   }, [statuses]);
 
@@ -126,20 +153,15 @@ export default function ClientsPage() {
     return Array.from(set).sort();
   }, [clients]);
 
-  // ✅ NEW: IC + appt setter dropdown values
   const icOptions = useMemo(() => {
     const set = new Set();
-    (Array.isArray(clients) ? clients : []).forEach((c) => {
-      if (c.ic) set.add(String(c.ic).trim());
-    });
+    (Array.isArray(clients) ? clients : []).forEach((c) => c.ic && set.add(String(c.ic).trim()));
     return Array.from(set).filter(Boolean).sort();
   }, [clients]);
 
   const apptSetterOptions = useMemo(() => {
     const set = new Set();
-    (Array.isArray(clients) ? clients : []).forEach((c) => {
-      if (c.appt_setter) set.add(String(c.appt_setter).trim());
-    });
+    (Array.isArray(clients) ? clients : []).forEach((c) => c.appt_setter && set.add(String(c.appt_setter).trim()));
     return Array.from(set).filter(Boolean).sort();
   }, [clients]);
 
@@ -149,7 +171,6 @@ export default function ClientsPage() {
     const qDigits = (q || "").replace(/\D/g, "");
 
     let out = list.filter((c) => {
-      // search
       if (qLower) {
         const name = (c.name || "").toLowerCase();
         const phone = (c.phone || "").replace(/\D/g, "");
@@ -165,7 +186,6 @@ export default function ClientsPage() {
         if (!matches) return false;
       }
 
-      // filters
       if (statusId && String(c.status_id || "") !== String(statusId)) return false;
       if (office && String(c.office || "") !== String(office)) return false;
       if (caseType && String(c.case_type || "") !== String(caseType)) return false;
@@ -182,30 +202,28 @@ export default function ClientsPage() {
       return true;
     });
 
-    // sort
     out.sort((a, b) => {
-      if (sortBy === "name") {
-        return String(a.name || "").localeCompare(String(b.name || ""));
-      }
-      if (sortBy === "case_type") {
-        return String(a.case_type || "").localeCompare(String(b.case_type || ""));
-      }
-      if (sortBy === "ic") {
-        return String(a.ic || "").localeCompare(String(b.ic || ""));
-      }
-      if (sortBy === "appt_setter") {
-        return String(a.appt_setter || "").localeCompare(String(b.appt_setter || ""));
-      }
+      if (sortBy === "name") return String(a.name || "").localeCompare(String(b.name || ""));
+      if (sortBy === "case_type") return String(a.case_type || "").localeCompare(String(b.case_type || ""));
+      if (sortBy === "ic") return String(a.ic || "").localeCompare(String(b.ic || ""));
+      if (sortBy === "appt_setter") return String(a.appt_setter || "").localeCompare(String(b.appt_setter || ""));
 
-      // default = most recent
-      return (
-        safeTime(b.last_message_at || b.lastMessageAt) -
-        safeTime(a.last_message_at || a.lastMessageAt)
-      );
+      return safeTime(b.last_message_at || b.lastMessageAt) - safeTime(a.last_message_at || a.lastMessageAt);
     });
 
     return out;
-  }, [clients, q, statusId, office, caseType, language, unreadOnly, icFilter, apptSetterFilter, sortBy]);
+  }, [
+    clients,
+    q,
+    statusId,
+    office,
+    caseType,
+    language,
+    unreadOnly,
+    icFilter,
+    apptSetterFilter,
+    sortBy,
+  ]);
 
   const resetFilters = () => {
     setQ("");
@@ -224,50 +242,31 @@ export default function ClientsPage() {
   };
 
   return (
-    <div style={{ maxWidth: 1150, margin: "18px auto", padding: "0 16px" }}>
+    <div style={{ maxWidth: 1250, margin: "18px auto", padding: "0 16px" }}>
+      {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <h2 style={{ margin: 0, fontWeight: 900 }}>Clients</h2>
+        <h2 style={{ margin: 0, fontWeight: 900, letterSpacing: 0.2 }}>Clients</h2>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button
-            onClick={() => navigate("/inbox")}
-            style={{
-              border: "1px solid #e2e8f0",
-              background: "#fff",
-              padding: "8px 12px",
-              borderRadius: 12,
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
+          <button className="cc-btn2" onClick={() => navigate("/inbox")}>
             Back to Inbox
           </button>
 
-          <button
-            onClick={resetFilters}
-            style={{
-              border: "1px solid #e2e8f0",
-              background: "#f8fafc",
-              padding: "8px 12px",
-              borderRadius: 12,
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
-          >
+          <button className="cc-btn2 cc-btn2-muted" onClick={resetFilters}>
             Reset
           </button>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters card */}
       <div
         style={{
           marginTop: 12,
           background: "#fff",
           border: "1px solid #e2e8f0",
-          borderRadius: 14,
+          borderRadius: 16,
           padding: 12,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          boxShadow: "0 10px 30px rgba(2,6,23,0.06)",
         }}
       >
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", gap: 10 }}>
@@ -275,21 +274,10 @@ export default function ClientsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name / phone / email / notes"
-            style={{
-              width: "100%",
-              height: 38,
-              borderRadius: 12,
-              border: "1px solid #e2e8f0",
-              padding: "0 12px",
-              fontWeight: 700,
-            }}
+            className="cc-input2"
           />
 
-          <select
-            value={statusId}
-            onChange={(e) => setStatusId(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 800 }}
-          >
+          <select value={statusId} onChange={(e) => setStatusId(e.target.value)} className="cc-input2">
             <option value="">Status (all)</option>
             {(Array.isArray(statuses) ? statuses : []).map((s) => (
               <option key={s.id} value={s.id}>
@@ -298,11 +286,7 @@ export default function ClientsPage() {
             ))}
           </select>
 
-          <select
-            value={office}
-            onChange={(e) => setOffice(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 800 }}
-          >
+          <select value={office} onChange={(e) => setOffice(e.target.value)} className="cc-input2">
             <option value="">Office (all)</option>
             {uniqueOffices.map((x) => (
               <option key={x} value={x}>
@@ -311,11 +295,7 @@ export default function ClientsPage() {
             ))}
           </select>
 
-          <select
-            value={caseType}
-            onChange={(e) => setCaseType(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 800 }}
-          >
+          <select value={caseType} onChange={(e) => setCaseType(e.target.value)} className="cc-input2">
             <option value="">Case Type (all)</option>
             {uniqueCaseTypes.map((x) => (
               <option key={x} value={x}>
@@ -324,11 +304,7 @@ export default function ClientsPage() {
             ))}
           </select>
 
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 800 }}
-          >
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} className="cc-input2">
             <option value="">Language (all)</option>
             {uniqueLanguages.map((x) => (
               <option key={x} value={x}>
@@ -338,13 +314,8 @@ export default function ClientsPage() {
           </select>
         </div>
 
-        {/* second filter row */}
         <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <select
-            value={icFilter}
-            onChange={(e) => setIcFilter(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
-          >
+          <select value={icFilter} onChange={(e) => setIcFilter(e.target.value)} className="cc-input2" style={{ minWidth: 180 }}>
             <option value="all">IC (all)</option>
             {icOptions.map((v) => (
               <option key={v} value={v}>
@@ -356,7 +327,8 @@ export default function ClientsPage() {
           <select
             value={apptSetterFilter}
             onChange={(e) => setApptSetterFilter(e.target.value)}
-            style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
+            className="cc-input2"
+            style={{ minWidth: 220 }}
           >
             <option value="all">Appt Setter (all)</option>
             {apptSetterOptions.map((v) => (
@@ -373,11 +345,7 @@ export default function ClientsPage() {
 
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ fontWeight: 900, color: "#0f172a" }}>Sort</div>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{ height: 38, borderRadius: 12, border: "1px solid #e2e8f0", padding: "0 10px", fontWeight: 900 }}
-            >
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="cc-input2" style={{ minWidth: 180 }}>
               <option value="recent">Most recent</option>
               <option value="name">Name</option>
               <option value="case_type">Case Type</option>
@@ -388,22 +356,22 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table card */}
       <div
         style={{
           marginTop: 12,
           background: "#fff",
           border: "1px solid #e2e8f0",
-          borderRadius: 14,
+          borderRadius: 16,
           overflow: "hidden",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          boxShadow: "0 10px 30px rgba(2,6,23,0.06)",
         }}
       >
         <div style={{ padding: "10px 12px", borderBottom: "1px solid #e2e8f0", display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ fontWeight: 900, color: "#0f172a" }}>
             {loading ? "Loading..." : `${filtered.length} clients`}
           </div>
-          <div style={{ marginLeft: "auto", fontSize: 12, color: "#64748b", fontWeight: 700 }}>
+          <div style={{ marginLeft: "auto", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
             Click a row to open conversation
           </div>
         </div>
@@ -414,43 +382,82 @@ export default function ClientsPage() {
           <div style={{ padding: 16, color: "#64748b", fontWeight: 700 }}>No clients match these filters.</div>
         ) : (
           <div style={{ width: "100%", overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table className="cc-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
-                  <th style={th}>Name</th>
-                  <th style={th}>Phone</th>
-                  <th style={th}>Status</th>
-                  <th style={th}>Office</th>
-                  <th style={th}>Case</th>
-                  <th style={th}>IC</th>
-                  <th style={th}>Appt Setter</th>
-                  <th style={th}>Language</th>
-                  <th style={thCenter}>Unread</th>
+                <tr>
+                  <th className="cc-th">Name</th>
+                  <th className="cc-th">Phone</th>
+                  <th className="cc-th">Status</th>
+                  <th className="cc-th">Office</th>
+                  <th className="cc-th">Case</th>
+                  <th className="cc-th">IC</th>
+                  <th className="cc-th">Appt Setter</th>
+                  <th className="cc-th">Language</th>
+                  <th className="cc-th cc-center">Unread</th>
                 </tr>
               </thead>
+
               <tbody>
                 {filtered.map((c) => {
                   const statusName = statusNameById.get(String(c.status_id || "")) || "";
+                  const theme = statusThemeByName(statusName);
                   const unread = Number(c.unreadCount || 0);
 
                   return (
-                    <tr
-                      key={c.id}
-                      onClick={() => openConversation(c.id)}
-                      style={{
-                        cursor: "pointer",
-                        borderTop: "1px solid #eef2f7",
-                      }}
-                    >
-                      <td style={tdStrong}>{c.name || "-"}</td>
-                      <td style={td}>{c.phone || "-"}</td>
-                      <td style={td}>{statusName || "-"}</td>
-                      <td style={td}>{c.office || "-"}</td>
-                      <td style={td}>{c.case_type || "-"}</td>
-                      <td style={td}>{c.ic || "-"}</td>
-                      <td style={td}>{c.appt_setter || "-"}</td>
-                      <td style={td}>{c.language || "-"}</td>
-                      <td style={tdCenter}>{unread ? unread : ""}</td>
+                    <tr key={c.id} className="cc-tr" onClick={() => openConversation(c.id)}>
+                      <td className="cc-td cc-strong">{c.name || "-"}</td>
+                      <td className="cc-td">{formatPhone10(c.phone) || "-"}</td>
+                      <td className="cc-td">
+                        {statusName ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 8,
+                              borderRadius: 999,
+                              padding: "4px 10px",
+                              fontWeight: 900,
+                              fontSize: 12,
+                              background: theme.pillBg,
+                              color: theme.pillText,
+                              border: `1px solid ${theme.border}`,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {statusName}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#94a3b8", fontWeight: 900 }}>—</span>
+                        )}
+                      </td>
+                      <td className="cc-td">{c.office || "-"}</td>
+                      <td className="cc-td">{c.case_type || "-"}</td>
+                      <td className="cc-td">{c.ic || "-"}</td>
+                      <td className="cc-td">{c.appt_setter || "-"}</td>
+                      <td className="cc-td">{c.language || "-"}</td>
+                      <td className="cc-td cc-center">
+                        {unread ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 28,
+                              height: 22,
+                              padding: "0 8px",
+                              borderRadius: 999,
+                              background: "#ef4444",
+                              color: "#fff",
+                              fontWeight: 900,
+                              fontSize: 12,
+                            }}
+                          >
+                            {unread}
+                          </span>
+                        ) : (
+                          ""
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -462,30 +469,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-const th = {
-  textAlign: "left",
-  padding: "10px 12px",
-  fontSize: 12,
-  color: "#334155",
-  fontWeight: 900,
-  whiteSpace: "nowrap",
-};
-
-const thCenter = { ...th, textAlign: "center" };
-
-const td = {
-  padding: "10px 12px",
-  fontSize: 13,
-  color: "#334155",
-  fontWeight: 700,
-  whiteSpace: "nowrap",
-};
-
-const tdStrong = {
-  ...td,
-  fontWeight: 900,
-  color: "#0f172a",
-};
-
-const tdCenter = { ...td, textAlign: "center" };
