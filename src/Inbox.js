@@ -76,12 +76,10 @@ function redirectToLogin() {
 function prettyName(raw) {
   const s = String(raw || "").trim();
   if (!s) return "";
-  // common junk values
   if (s === "me") return "You";
   if (s === "agent") return "Agent";
   if (s === "system") return "Automated";
   if (s === "client") return "Client";
-  // Title-case basic
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
@@ -91,7 +89,7 @@ function safeDate(ts) {
 }
 
 /** =========================
- * ClientForm
+ * ClientForm (unchanged)
  * ========================= */
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
@@ -283,9 +281,7 @@ function ToastBanner({ toast, onClose, onJump }) {
     >
       <div style={{ width: 10, height: 10, borderRadius: 999, background: "#22c55e", flex: "0 0 auto" }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.2 }}>
-          New message
-        </div>
+        <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.2 }}>New message</div>
         <div style={{ fontSize: 13, opacity: 0.92, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {toast.text}
         </div>
@@ -337,38 +333,40 @@ function Inbox() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
+
   const [showClientForm, setShowClientForm] = useState(false);
   const [editClientData, setEditClientData] = useState(null);
   const [search, setSearch] = useState("");
+
   const messagesEndRef = useRef(null);
 
-  // NEW UI STATES
+  // Toast / highlight
   const [toast, setToast] = useState({ show: false, text: "", clientId: null });
   const toastTimerRef = useRef(null);
   const [highlightClientId, setHighlightClientId] = useState(null);
   const highlightTimerRef = useRef(null);
 
   const selectedClientId = selectedClient?.id || null;
-const location = useLocation();
 
-const clientIdFromUrl = useMemo(() => {
-  const qs = new URLSearchParams(location.search);
-  const id = qs.get("clientId") || qs.get("clientid");
-  return id ? Number(id) : null;
-}, [location.search]);
+  const location = useLocation();
+  const clientIdFromUrl = useMemo(() => {
+    const qs = new URLSearchParams(location.search);
+    const id = qs.get("clientId") || qs.get("clientid");
+    return id ? Number(id) : null;
+  }, [location.search]);
 
-  // ✅ request browser notification permission once
+  // Request browser notification permission once
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
   }, []);
 
-  // ✅ helper: show toast (auto dismiss)
   const showToast = (text, clientId) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ show: true, text, clientId: clientId || null });
@@ -384,7 +382,7 @@ const clientIdFromUrl = useMemo(() => {
     highlightTimerRef.current = setTimeout(() => setHighlightClientId(null), 1400);
   };
 
-  // ✅ Load statuses + clients (401-safe + array-safe)
+  // Load statuses + clients
   useEffect(() => {
     let cancelled = false;
 
@@ -453,14 +451,13 @@ const clientIdFromUrl = useMemo(() => {
     fetchClientsOnce();
 
     const intervalId = setInterval(fetchClientsOnce, 10000);
-
     return () => {
       cancelled = true;
       clearInterval(intervalId);
     };
   }, []);
 
-  // ✅ SOCKET: listen for new messages + move client to top + notify
+  // Socket listeners
   useEffect(() => {
     const socket = io(process.env.REACT_APP_API_URL, {
       transports: ["websocket"],
@@ -476,12 +473,10 @@ const clientIdFromUrl = useMemo(() => {
       const isInbound = msg.direction === "inbound" || msg.sender === "client";
       const isViewingThisChat = selectedClientId === msgClientId;
 
-      // If viewing this client, append live
       if (isViewingThisChat) {
         setMessages((prev) => [...(Array.isArray(prev) ? prev : []), msg]);
       }
 
-      // Update client list: move to top + unread counts
       setClients((prev) => {
         const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === msgClientId);
@@ -500,7 +495,6 @@ const clientIdFromUrl = useMemo(() => {
         return next;
       });
 
-      // Alerts for inbound when NOT viewing
       if (isInbound && !isViewingThisChat) {
         playBeep();
 
@@ -513,10 +507,8 @@ const clientIdFromUrl = useMemo(() => {
         flashClient(msgClientId);
 
         if ("Notification" in window && Notification.permission === "granted") {
-          const title = `New text from ${clientName}`;
-          const body = (msg.text || "").slice(0, 140) || "New message";
           try {
-            new Notification(title, { body });
+            new Notification(`New text from ${clientName}`, { body: (msg.text || "").slice(0, 140) || "New message" });
           } catch {}
         }
       }
@@ -533,9 +525,9 @@ const clientIdFromUrl = useMemo(() => {
       socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId]); // keep your original dependency
+  }, [selectedClientId]);
 
-  // ✅ fetch messages when selecting a client (401-safe + array-safe)
+  // Fetch messages when selecting client
   useEffect(() => {
     let cancelled = false;
 
@@ -578,19 +570,19 @@ const clientIdFromUrl = useMemo(() => {
     }
 
     loadConversation();
-
     return () => {
       cancelled = true;
     };
   }, [selectedClient]);
 
-  // scroll to bottom on new messages
+  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
+  // Typing indicator
   useEffect(() => {
     if (newMsg) {
       setTyping(true);
@@ -629,7 +621,6 @@ const clientIdFromUrl = useMemo(() => {
 
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
-      // move this client to top immediately
       setClients((prev) => {
         const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === selectedClient.id);
@@ -647,7 +638,6 @@ const clientIdFromUrl = useMemo(() => {
         return next;
       });
 
-      // refresh conversation
       const res2 = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
         headers: { Authorization: "Bearer " + getToken() },
       });
@@ -686,6 +676,7 @@ const clientIdFromUrl = useMemo(() => {
       setSelectedClient(savedClient);
     } else {
       setClients((prev) => [savedClient, ...(Array.isArray(prev) ? prev : [])]);
+      setSelectedClient(savedClient);
     }
     setShowClientForm(false);
   };
@@ -735,7 +726,10 @@ const clientIdFromUrl = useMemo(() => {
       })
       .then((data) => {
         if (data && data.success) {
-          setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c)));
+          setClients((prev) =>
+            (Array.isArray(prev) ? prev : []).map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c))
+          );
+
           if (selectedClient && selectedClient.id === clientId) {
             setSelectedClient({ ...selectedClient, status_id: statusId });
           }
@@ -764,20 +758,19 @@ const clientIdFromUrl = useMemo(() => {
 
   const handleSelectClient = (client) => {
     setSelectedClient(client);
-    // clear unread when opening the chat
     setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
   };
-useEffect(() => {
-  if (!clientIdFromUrl) return;
-  if (!Array.isArray(clients) || clients.length === 0) return;
 
-  // already selected
-  if (Number(selectedClient?.id) === Number(clientIdFromUrl)) return;
+  // Deep-link selection
+  useEffect(() => {
+    if (!clientIdFromUrl) return;
+    if (!Array.isArray(clients) || clients.length === 0) return;
+    if (Number(selectedClient?.id) === Number(clientIdFromUrl)) return;
 
-  const target = clients.find((c) => Number(c.id) === Number(clientIdFromUrl));
-  if (target) handleSelectClient(target);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [clientIdFromUrl, clients]);
+    const target = clients.find((c) => Number(c.id) === Number(clientIdFromUrl));
+    if (target) handleSelectClient(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientIdFromUrl, clients]);
 
   const jumpToClient = (clientId) => {
     const target = (Array.isArray(clients) ? clients : []).find((c) => c.id === clientId);
@@ -806,6 +799,7 @@ useEffect(() => {
           overflow: "hidden",
         }}
       >
+        {/* LEFT: Client list (clean) */}
         <aside
           className="inbox-sidebar"
           style={{
@@ -817,6 +811,7 @@ useEffect(() => {
           }}
         >
           <h3 style={{ marginTop: 0 }}>Clients</h3>
+
           <button
             onClick={openAddClientForm}
             style={{
@@ -861,7 +856,6 @@ useEffect(() => {
               return (
                 <li
                   key={client.id}
-                  className={isSelected ? "selected" : ""}
                   onClick={() => handleSelectClient(client)}
                   style={{
                     background: isSelected ? "#eef2ff" : "#fff",
@@ -880,7 +874,7 @@ useEffect(() => {
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ fontWeight: 600, fontSize: 16, flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, flex: 1, minWidth: 0 }}>
                       {client.name || "No Name"}
                     </div>
 
@@ -908,7 +902,7 @@ useEffect(() => {
                           borderRadius: 999,
                           padding: "3px 10px",
                           fontSize: 12,
-                          fontWeight: 700,
+                          fontWeight: 800,
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -917,58 +911,16 @@ useEffect(() => {
                     )}
                   </div>
 
-                  <div style={{ fontSize: 13, color: "#475569", marginTop: 2 }}>
+                  <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
                     {client.phone || "No phone"}
                   </div>
-
-                  <div style={{ marginTop: 8 }}>
-                    <select
-                      className="status-dropdown"
-                      value={client.status_id || ""}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handleStatusChange(client.id, e.target.value);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        width: "100%",
-                        maxWidth: "100%",
-                        height: 32,
-                        fontSize: 13,
-                        borderRadius: 8,
-                        border: "1px solid #e2e8f0",
-                        padding: "4px 8px",
-                        background: "#fff",
-                      }}
-                    >
-                      <option value="">Select status...</option>
-                      {(Array.isArray(statuses) ? statuses : []).map((status) => (
-                        <option key={status.id} value={status.id}>
-                          {status.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
-                    {client.language === "Spanish" ? "Spanish" : "English"}
-                  </div>
-
-                  {isSelected && (
-                    <div style={{ marginTop: 8, color: "#555", fontSize: 13 }}>
-                      {client.email && <div>Email: {client.email}</div>}
-                      {client.notes && <div>Notes: {client.notes}</div>}
-                      {client.office && <div>Office: {client.office}</div>}
-                      {client.case_type && <div>Case: {client.case_type}</div>}
-                      {client.appointment_datetime && <div>Appt: {client.appointment_datetime}</div>}
-                    </div>
-                  )}
                 </li>
               );
             })}
           </ul>
         </aside>
 
+        {/* RIGHT: Conversation + client info */}
         <main
           className="inbox-main"
           style={{
@@ -986,7 +938,7 @@ useEffect(() => {
                 margin: "auto",
                 textAlign: "center",
                 fontSize: 16,
-                fontWeight: 500,
+                fontWeight: 600,
               }}
             >
               Select a client to view messages
@@ -996,45 +948,109 @@ useEffect(() => {
           {selectedClient && (
             <>
               <div className="header-row" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
-                <h2 style={{ margin: 0, fontWeight: 700 }}>
-                  Conversation with {selectedClient.name}
-                </h2>
+                <h2 style={{ margin: 0, fontWeight: 800 }}>Conversation with {selectedClient.name}</h2>
 
                 <button
-                  className="edit-btn"
                   onClick={openEditClientForm}
                   style={{
                     marginLeft: "auto",
                     background: "#818cf8",
                     color: "#fff",
                     border: "none",
-                    borderRadius: 6,
-                    padding: "6px 18px",
-                    fontWeight: 600,
+                    borderRadius: 10,
+                    padding: "8px 16px",
+                    fontWeight: 800,
                     cursor: "pointer",
                   }}
                 >
-                  Edit Client
+                  Edit
                 </button>
 
                 <button
-                  className="delete-btn"
                   onClick={handleDeleteClient}
                   style={{
                     background: "#f43f5e",
                     color: "#fff",
                     border: "none",
-                    borderRadius: 6,
-                    padding: "6px 18px",
-                    fontWeight: 600,
-                    marginLeft: 10,
+                    borderRadius: 10,
+                    padding: "8px 16px",
+                    fontWeight: 800,
                     cursor: "pointer",
                   }}
                 >
-                  Delete Client
+                  Delete
                 </button>
               </div>
 
+              {/* Client Info Card (RIGHT PANEL) */}
+              <div
+                style={{
+                  background: "#fff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: 14,
+                  marginBottom: 12,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                }}
+              >
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ fontWeight: 900, fontSize: 14, color: "#111827" }}>
+                    {selectedClient.phone || "No phone"}
+                  </div>
+
+                  <div style={{ marginLeft: "auto", minWidth: 260 }}>
+                    <select
+                      value={selectedClient.status_id || ""}
+                      onChange={(e) => handleStatusChange(selectedClient.id, e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: 36,
+                        fontSize: 13,
+                        borderRadius: 10,
+                        border: "1px solid #e2e8f0",
+                        padding: "6px 10px",
+                        background: "#fff",
+                        fontWeight: 800,
+                      }}
+                    >
+                      <option value="">Select status...</option>
+                      {(Array.isArray(statuses) ? statuses : []).map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 8,
+                    fontSize: 13,
+                    color: "#334155",
+                  }}
+                >
+                  <div><b>Office:</b> {selectedClient.office || "-"}</div>
+                  <div><b>Language:</b> {selectedClient.language || "-"}</div>
+
+                  <div><b>Case:</b> {selectedClient.case_type || "-"}</div>
+                  <div><b>Subcase:</b> {selectedClient.case_subtype || "-"}</div>
+
+                  <div><b>Appt:</b> {selectedClient.appointment_datetime || selectedClient.appt_date || "-"}</div>
+                  <div><b>Appt Setter:</b> {selectedClient.appt_setter || "-"}</div>
+
+                  <div><b>IC:</b> {selectedClient.ic || "-"}</div>
+                  <div><b>Intake Coord:</b> {selectedClient.intake_coordinator || "-"}</div>
+
+                  <div style={{ gridColumn: "1 / -1" }}><b>Email:</b> {selectedClient.email || "-"}</div>
+                  <div style={{ gridColumn: "1 / -1" }}><b>Notes:</b> {selectedClient.notes || "-"}</div>
+                </div>
+              </div>
+
+              {/* Messages */}
               <div
                 className="messages"
                 style={{
@@ -1042,7 +1058,7 @@ useEffect(() => {
                   borderRadius: 12,
                   padding: 18,
                   marginBottom: 16,
-                  height: "calc(100% - 120px)",
+                  height: "calc(100% - 210px)",
                   overflowY: "auto",
                   boxShadow: "0 1px 4px #e0e7ef",
                 }}
@@ -1073,10 +1089,6 @@ useEffect(() => {
                     const isOutbound = msg.direction === "outbound" || msg.sender === "me";
                     const bubbleClass = isSystem ? "system" : isOutbound ? "me" : "client";
 
-                    // ✅ footer label:
-                    // - system: "Automated • 3:15 PM"
-                    // - outbound: "Sent by Cass • 3:15 PM"
-                    // - inbound: "Received • 3:15 PM"
                     let footer = "";
                     if (isSystem) {
                       footer = `Automated • ${format(msgDate, "h:mm a")}`;
@@ -1134,6 +1146,7 @@ useEffect(() => {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Input */}
               <form className="message-input-row" onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
                 <input
                   type="text"
@@ -1158,7 +1171,7 @@ useEffect(() => {
                     border: "none",
                     background: "#6366f1",
                     color: "#fff",
-                    fontWeight: 600,
+                    fontWeight: 800,
                     fontSize: 16,
                     cursor: "pointer",
                     opacity: !newMsg.trim() ? 0.7 : 1,
