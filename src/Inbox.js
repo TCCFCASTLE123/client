@@ -769,17 +769,20 @@ function Inbox() {
     <>
       <ToastBanner toast={toast} onClose={() => setToast((t) => ({ ...t, show: false }))} onJump={jumpToClient} />
 
-      <div
-        className="inbox-container"
-        style={{
-          display: "flex",
-          minHeight: 600,
-          height: "calc(100vh - 190px)",
-          maxWidth: 1100,
-          margin: "20px auto",
-          overflow: "hidden",
-        }}
-      >
+<div
+  className="inbox-container"
+  style={{
+    display: "flex",
+    minHeight: 600,
+    height: "calc(100vh - 190px)",
+    width: "calc(100vw - 40px)",     // use almost full width
+    maxWidth: 1600,                  // still prevents ultra-wide weirdness
+    margin: "20px auto",
+    overflow: "hidden",
+  }}
+>
+
+
         {/* LEFT: Client list */}
         <aside
           className="inbox-sidebar"
@@ -959,7 +962,7 @@ function Inbox() {
               {/* 2-column */}
               <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
                 {/* LEFT: messages + input */}
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <div style={{ flex: 1, minWidth: 650, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
@@ -1083,18 +1086,19 @@ function Inbox() {
                 </div>
 
                 {/* RIGHT: details */}
-                <div
-                  style={{
-                    width: 320,
-                    flex: "0 0 320px",
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 12,
-                    padding: 14,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    height: "fit-content",
-                  }}
-                >
+         <div
+  style={{
+    width: 260,
+    flex: "0 0 260px",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    padding: 12,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+    height: "fit-content",
+  }}
+>
+
                   <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
 
              <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
