@@ -892,7 +892,9 @@ function Inbox() {
                     )}
                   </div>
 
-                  <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{client.phone || "No phone"}</div>
+                 <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
+  {formatPhoneUS(client.phone) || "No phone"}
+</div>
                 </li>
               );
             })}
@@ -1095,7 +1097,10 @@ function Inbox() {
                 >
                   <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
 
-                  <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>{selectedClient.phone || "No phone"}</div>
+             <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
+  {formatPhoneUS(selectedClient.phone) || "No phone"}
+</div>
+
 
                   <div style={{ marginTop: 10 }}>
                     <select
