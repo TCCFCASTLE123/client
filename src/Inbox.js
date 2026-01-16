@@ -89,7 +89,8 @@ function safeDate(ts) {
 }
 
 /** =========================
- * ClientForm (unchanged)
+ * ClientForm
+ * (removed intake coordinator field)
  * ========================= */
 function ClientForm({ initialData = {}, onClose, onSave }) {
   const [name, setName] = useState(initialData.name || "");
@@ -100,13 +101,10 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [office, setOffice] = useState(initialData.office || "");
   const [caseType, setCaseType] = useState(initialData.case_type || "");
   const [caseSubtype, setCaseSubtype] = useState(initialData.case_subtype || "");
-
   const [apptDate, setApptDate] = useState(initialData.appt_date || "");
   const [apptTime, setApptTime] = useState(initialData.appt_time || "");
-
   const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
   const [ic, setIc] = useState(initialData.ic || "");
-  const [intakeCoordinator, setIntakeCoordinator] = useState(initialData.intake_coordinator || "");
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
@@ -129,24 +127,18 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
       : `${process.env.REACT_APP_API_URL}/api/clients`;
 
     const payload = {};
-
-    if (cleanName) payload.name = cleanName;
-    if (cleanPhone) payload.phone = cleanPhone;
-
+    payload.name = cleanName;
+    payload.phone = cleanPhone;
     if (email && email.trim()) payload.email = email.trim();
     if (notes && notes.trim()) payload.notes = notes.trim();
     if (language && language.trim()) payload.language = language.trim();
     if (office && office.trim()) payload.office = office.trim();
-
     if (caseType && caseType.trim()) payload.case_type = caseType.trim();
     if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
-
     if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim();
     if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
-
     if (apptSetter && apptSetter.trim()) payload.appt_setter = apptSetter.trim();
     if (ic && ic.trim()) payload.ic = ic.trim();
-    if (intakeCoordinator && intakeCoordinator.trim()) payload.intake_coordinator = intakeCoordinator.trim();
 
     try {
       setSaving(true);
@@ -196,13 +188,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 
         <div className="cc-row">
           <input className="cc-field" type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} />
-          <input
-            className="cc-field"
-            type="text"
-            value={apptTime || ""}
-            onChange={(e) => setApptTime(e.target.value)}
-            placeholder="6:00 PM"
-          />
+          <input className="cc-field" type="text" value={apptTime || ""} onChange={(e) => setApptTime(e.target.value)} placeholder="6:00 PM" />
         </div>
 
         <div className="cc-row">
@@ -255,7 +241,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 }
 
 /** =========================
- * Toast / Banner (frontend only)
+ * Toast / Banner
  * ========================= */
 function ToastBanner({ toast, onClose, onJump }) {
   if (!toast?.show) return null;
@@ -345,7 +331,6 @@ function Inbox() {
 
   const messagesEndRef = useRef(null);
 
-  // Toast / highlight
   const [toast, setToast] = useState({ show: false, text: "", clientId: null });
   const toastTimerRef = useRef(null);
   const [highlightClientId, setHighlightClientId] = useState(null);
@@ -360,7 +345,6 @@ function Inbox() {
     return id ? Number(id) : null;
   }, [location.search]);
 
-  // Request browser notification permission once
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
@@ -399,7 +383,6 @@ function Inbox() {
 
         const data = await res.json().catch(() => []);
         const list = Array.isArray(data) ? data : Array.isArray(data?.statuses) ? data.statuses : [];
-
         if (!cancelled) setStatuses(list);
       } catch (err) {
         if (!cancelled) alert(err.message);
@@ -419,7 +402,6 @@ function Inbox() {
 
         const data = await res.json().catch(() => []);
         const fresh = Array.isArray(data) ? data : Array.isArray(data?.clients) ? data.clients : [];
-
         if (cancelled) return;
 
         setClients((prev) => {
@@ -508,7 +490,9 @@ function Inbox() {
 
         if ("Notification" in window && Notification.permission === "granted") {
           try {
-            new Notification(`New text from ${clientName}`, { body: (msg.text || "").slice(0, 140) || "New message" });
+            new Notification(`New text from ${clientName}`, {
+              body: (msg.text || "").slice(0, 140) || "New message",
+            });
           } catch {}
         }
       }
@@ -598,11 +582,7 @@ function Inbox() {
     if (!newMsg.trim()) return alert("Type a message first.");
     if (!selectedClient) return alert("No client selected.");
 
-    const payload = {
-      to: selectedClient.phone,
-      text: newMsg,
-      client_id: selectedClient.id,
-    };
+    const payload = { to: selectedClient.phone, text: newMsg, client_id: selectedClient.id };
 
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/send`, {
@@ -621,23 +601,21 @@ function Inbox() {
 
       if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
 
+      // Move this client to top immediately
       setClients((prev) => {
         const next = [...(Array.isArray(prev) ? prev : [])];
         const idx = next.findIndex((c) => c.id === selectedClient.id);
         if (idx === -1) return prev;
 
         const old = next[idx];
-        const updated = {
-          ...old,
-          lastMessageAt: new Date().toISOString(),
-          lastMessageText: payload.text,
-        };
+        const updated = { ...old, lastMessageAt: new Date().toISOString(), lastMessageText: payload.text };
 
         next.splice(idx, 1);
         next.unshift(updated);
         return next;
       });
 
+      // Refresh conversation
       const res2 = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
         headers: { Authorization: "Bearer " + getToken() },
       });
@@ -761,7 +739,7 @@ function Inbox() {
     setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
   };
 
-  // Deep-link selection
+  // Deep link selection
   useEffect(() => {
     if (!clientIdFromUrl) return;
     if (!Array.isArray(clients) || clients.length === 0) return;
@@ -782,11 +760,7 @@ function Inbox() {
 
   return (
     <>
-      <ToastBanner
-        toast={toast}
-        onClose={() => setToast((t) => ({ ...t, show: false }))}
-        onJump={jumpToClient}
-      />
+      <ToastBanner toast={toast} onClose={() => setToast((t) => ({ ...t, show: false }))} onJump={jumpToClient} />
 
       <div
         className="inbox-container"
@@ -799,7 +773,7 @@ function Inbox() {
           overflow: "hidden",
         }}
       >
-        {/* LEFT: Client list (clean) */}
+        {/* LEFT: Client list */}
         <aside
           className="inbox-sidebar"
           style={{
@@ -911,16 +885,14 @@ function Inbox() {
                     )}
                   </div>
 
-                  <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
-                    {client.phone || "No phone"}
-                  </div>
+                  <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>{client.phone || "No phone"}</div>
                 </li>
               );
             })}
           </ul>
         </aside>
 
-        {/* RIGHT: Conversation + client info */}
+        {/* RIGHT: Conversation + Details */}
         <main
           className="inbox-main"
           style={{
@@ -932,23 +904,16 @@ function Inbox() {
           }}
         >
           {!selectedClient && (
-            <div
-              style={{
-                color: "#64748b",
-                margin: "auto",
-                textAlign: "center",
-                fontSize: 16,
-                fontWeight: 600,
-              }}
-            >
+            <div style={{ color: "#64748b", margin: "auto", textAlign: "center", fontSize: 16, fontWeight: 600 }}>
               Select a client to view messages
             </div>
           )}
 
           {selectedClient && (
             <>
-              <div className="header-row" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 10 }}>
-                <h2 style={{ margin: 0, fontWeight: 800 }}>Conversation with {selectedClient.name}</h2>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                <h2 style={{ margin: 0, fontWeight: 900 }}>Conversation with {selectedClient.name}</h2>
 
                 <button
                   onClick={openEditClientForm}
@@ -959,7 +924,7 @@ function Inbox() {
                     border: "none",
                     borderRadius: 10,
                     padding: "8px 16px",
-                    fontWeight: 800,
+                    fontWeight: 900,
                     cursor: "pointer",
                   }}
                 >
@@ -974,7 +939,7 @@ function Inbox() {
                     border: "none",
                     borderRadius: 10,
                     padding: "8px 16px",
-                    fontWeight: 800,
+                    fontWeight: 900,
                     cursor: "pointer",
                   }}
                 >
@@ -982,30 +947,156 @@ function Inbox() {
                 </button>
               </div>
 
-              {/* Client Info Card (RIGHT PANEL) */}
-              <div
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 12,
-                  padding: 14,
-                  marginBottom: 12,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                }}
-              >
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  <div style={{ fontWeight: 900, fontSize: 14, color: "#111827" }}>
-                    {selectedClient.phone || "No phone"}
+              {/* 2-column */}
+              <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
+                {/* LEFT: messages + input */}
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                  <div
+                    className="messages"
+                    style={{
+                      background: "#f4f7fa",
+                      borderRadius: 12,
+                      padding: 18,
+                      flex: 1,
+                      overflowY: "auto",
+                      boxShadow: "0 1px 4px #e0e7ef",
+                    }}
+                  >
+                    {loadingMessages && <div>Loading messages...</div>}
+                    {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
+                      <div className="no-messages" style={{ color: "#aaa" }}>
+                        No messages yet!
+                      </div>
+                    )}
+
+                    {(() => {
+                      let lastDate = null;
+
+                      return (Array.isArray(messages) ? messages : []).map((msg, i) => {
+                        const msgDate = safeDate(msg.timestamp);
+
+                        const showDate =
+                          !lastDate ||
+                          !(
+                            msgDate.getFullYear() === lastDate.getFullYear() &&
+                            msgDate.getMonth() === lastDate.getMonth() &&
+                            msgDate.getDate() === lastDate.getDate()
+                          );
+
+                        if (showDate) lastDate = msgDate;
+
+                        const isSystem = msg.sender === "system";
+                        const isOutbound = msg.direction === "outbound" || msg.sender === "me";
+                        const bubbleClass = isSystem ? "system" : isOutbound ? "me" : "client";
+
+                        let footer = "";
+                        if (isSystem) footer = `Automated • ${format(msgDate, "h:mm a")}`;
+                        else if (isOutbound) footer = `Sent by ${prettyName(msg.sender) || "Agent"} • ${format(msgDate, "h:mm a")}`;
+                        else footer = `Received • ${format(msgDate, "h:mm a")}`;
+
+                        return (
+                          <React.Fragment key={i}>
+                            {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
+
+                            <div
+                              className={`message ${bubbleClass}`}
+                              style={{
+                                background: isSystem ? "#f1f5f9" : undefined,
+                                border: isSystem ? "1px solid #e2e8f0" : undefined,
+                                color: isSystem ? "#6d28d9" : undefined,
+                                padding: isSystem ? "10px 14px" : "7px 16px",
+                                borderRadius: isSystem ? 16 : 10,
+                                margin: "8px 0",
+                                maxWidth: isSystem ? "85%" : undefined,
+                                alignSelf: isSystem ? "flex-start" : undefined,
+                                boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
+                              }}
+                            >
+                              <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
+                                {msg.text}
+                              </div>
+
+                              <div
+                                className="message-timestamp"
+                                style={{
+                                  marginTop: 6,
+                                  fontSize: 11,
+                                  opacity: 0.85,
+                                  color: isSystem ? "#6d28d9" : undefined,
+                                }}
+                              >
+                                {footer}
+                              </div>
+                            </div>
+                          </React.Fragment>
+                        );
+                      });
+                    })()}
+
+                    {typing && <div style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>You are typing...</div>}
+                    <div ref={messagesEndRef} />
                   </div>
 
-                  <div style={{ marginLeft: "auto", minWidth: 260 }}>
+                  <form onSubmit={handleSend} style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <input
+                      type="text"
+                      placeholder="Type your message..."
+                      value={newMsg}
+                      onChange={(e) => setNewMsg(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: 13,
+                        borderRadius: 19,
+                        border: "1px solid #bfc8da",
+                        fontSize: 15,
+                        outline: "none",
+                      }}
+                      disabled={!selectedClient}
+                    />
+                    <button
+                      type="submit"
+                      style={{
+                        padding: "0 24px",
+                        borderRadius: 19,
+                        border: "none",
+                        background: "#6366f1",
+                        color: "#fff",
+                        fontWeight: 900,
+                        fontSize: 16,
+                        cursor: "pointer",
+                        opacity: !newMsg.trim() ? 0.7 : 1,
+                      }}
+                      disabled={!newMsg.trim()}
+                    >
+                      Send
+                    </button>
+                  </form>
+                </div>
+
+                {/* RIGHT: details */}
+                <div
+                  style={{
+                    width: 320,
+                    flex: "0 0 320px",
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 12,
+                    padding: 14,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    height: "fit-content",
+                  }}
+                >
+                  <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
+
+                  <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>{selectedClient.phone || "No phone"}</div>
+
+                  <div style={{ marginTop: 10 }}>
                     <select
                       value={selectedClient.status_id || ""}
                       onChange={(e) => handleStatusChange(selectedClient.id, e.target.value)}
                       style={{
                         width: "100%",
                         height: 36,
-                        fontSize: 13,
                         borderRadius: 10,
                         border: "1px solid #e2e8f0",
                         padding: "6px 10px",
@@ -1021,176 +1112,62 @@ function Inbox() {
                       ))}
                     </select>
                   </div>
-                </div>
 
-                <div
-                  style={{
-                    marginTop: 10,
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 8,
-                    fontSize: 13,
-                    color: "#334155",
-                  }}
-                >
-                  <div><b>Office:</b> {selectedClient.office || "-"}</div>
-                  <div><b>Language:</b> {selectedClient.language || "-"}</div>
-
-                  <div><b>Case:</b> {selectedClient.case_type || "-"}</div>
-                  <div><b>Subcase:</b> {selectedClient.case_subtype || "-"}</div>
-
-                  <div><b>Appt:</b> {selectedClient.appointment_datetime || selectedClient.appt_date || "-"}</div>
-                  <div><b>Appt Setter:</b> {selectedClient.appt_setter || "-"}</div>
-
-                  <div><b>IC:</b> {selectedClient.ic || "-"}</div>
-                  <div><b>Intake Coord:</b> {selectedClient.intake_coordinator || "-"}</div>
-
-                  <div style={{ gridColumn: "1 / -1" }}><b>Email:</b> {selectedClient.email || "-"}</div>
-                  <div style={{ gridColumn: "1 / -1" }}><b>Notes:</b> {selectedClient.notes || "-"}</div>
+                  <div style={{ marginTop: 12, fontSize: 13, color: "#334155", display: "grid", gap: 6 }}>
+                    {selectedClient.office && (
+                      <div>
+                        <b>Office:</b> {selectedClient.office}
+                      </div>
+                    )}
+                    {selectedClient.language && (
+                      <div>
+                        <b>Language:</b> {selectedClient.language}
+                      </div>
+                    )}
+                    {selectedClient.case_type && (
+                      <div>
+                        <b>Case:</b> {selectedClient.case_type}
+                      </div>
+                    )}
+                    {selectedClient.case_subtype && (
+                      <div>
+                        <b>Subcase:</b> {selectedClient.case_subtype}
+                      </div>
+                    )}
+                    {(selectedClient.appointment_datetime || selectedClient.appt_date) && (
+                      <div>
+                        <b>Appt:</b> {selectedClient.appointment_datetime || selectedClient.appt_date}
+                      </div>
+                    )}
+                    {selectedClient.appt_setter && (
+                      <div>
+                        <b>Appt Setter:</b> {selectedClient.appt_setter}
+                      </div>
+                    )}
+                    {selectedClient.ic && (
+                      <div>
+                        <b>IC:</b> {selectedClient.ic}
+                      </div>
+                    )}
+                    {selectedClient.email && (
+                      <div>
+                        <b>Email:</b> {selectedClient.email}
+                      </div>
+                    )}
+                    {selectedClient.notes && (
+                      <div>
+                        <b>Notes:</b> {selectedClient.notes}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* Messages */}
-              <div
-                className="messages"
-                style={{
-                  background: "#f4f7fa",
-                  borderRadius: 12,
-                  padding: 18,
-                  marginBottom: 16,
-                  height: "calc(100% - 210px)",
-                  overflowY: "auto",
-                  boxShadow: "0 1px 4px #e0e7ef",
-                }}
-              >
-                {loadingMessages && <div>Loading messages...</div>}
-                {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
-                  <div className="no-messages" style={{ color: "#aaa" }}>
-                    No messages yet!
-                  </div>
-                )}
-
-                {(() => {
-                  let lastDate = null;
-
-                  return (Array.isArray(messages) ? messages : []).map((msg, i) => {
-                    const msgDate = safeDate(msg.timestamp);
-
-                    const showDate =
-                      !lastDate ||
-                      !(
-                        msgDate.getFullYear() === lastDate.getFullYear() &&
-                        msgDate.getMonth() === lastDate.getMonth() &&
-                        msgDate.getDate() === lastDate.getDate()
-                      );
-                    if (showDate) lastDate = msgDate;
-
-                    const isSystem = msg.sender === "system";
-                    const isOutbound = msg.direction === "outbound" || msg.sender === "me";
-                    const bubbleClass = isSystem ? "system" : isOutbound ? "me" : "client";
-
-                    let footer = "";
-                    if (isSystem) {
-                      footer = `Automated • ${format(msgDate, "h:mm a")}`;
-                    } else if (isOutbound) {
-                      const who = prettyName(msg.sender) || "Agent";
-                      footer = `Sent by ${who} • ${format(msgDate, "h:mm a")}`;
-                    } else {
-                      footer = `Received • ${format(msgDate, "h:mm a")}`;
-                    }
-
-                    return (
-                      <React.Fragment key={i}>
-                        {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
-
-                        <div
-                          className={`message ${bubbleClass}`}
-                          style={{
-                            background: isSystem ? "#f1f5f9" : undefined,
-                            border: isSystem ? "1px solid #e2e8f0" : undefined,
-                            color: isSystem ? "#6d28d9" : undefined,
-                            padding: isSystem ? "10px 14px" : "7px 16px",
-                            borderRadius: isSystem ? 16 : 10,
-                            margin: "8px 0",
-                            maxWidth: isSystem ? "85%" : undefined,
-                            alignSelf: isSystem ? "flex-start" : undefined,
-                            boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
-                          }}
-                        >
-                          <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
-                            {msg.text}
-                          </div>
-
-                          <div
-                            className="message-timestamp"
-                            style={{
-                              marginTop: 6,
-                              fontSize: 11,
-                              opacity: 0.85,
-                              color: isSystem ? "#6d28d9" : undefined,
-                            }}
-                          >
-                            {footer}
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    );
-                  });
-                })()}
-
-                {typing && (
-                  <div className="typing-indicator" style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>
-                    You are typing...
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Input */}
-              <form className="message-input-row" onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  value={newMsg}
-                  onChange={(e) => setNewMsg(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: 13,
-                    borderRadius: 19,
-                    border: "1px solid #bfc8da",
-                    fontSize: 15,
-                    outline: "none",
-                  }}
-                  disabled={!selectedClient}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    padding: "0 24px",
-                    borderRadius: 19,
-                    border: "none",
-                    background: "#6366f1",
-                    color: "#fff",
-                    fontWeight: 800,
-                    fontSize: 16,
-                    cursor: "pointer",
-                    opacity: !newMsg.trim() ? 0.7 : 1,
-                  }}
-                  disabled={!newMsg.trim()}
-                >
-                  Send
-                </button>
-              </form>
             </>
           )}
         </main>
 
         {showClientForm && (
-          <ClientForm
-            initialData={editClientData || {}}
-            onClose={() => setShowClientForm(false)}
-            onSave={handleClientSave}
-          />
+          <ClientForm initialData={editClientData || {}} onClose={() => setShowClientForm(false)} onSave={handleClientSave} />
         )}
       </div>
     </>
