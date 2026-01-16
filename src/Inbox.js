@@ -112,13 +112,6 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-const location = useLocation();
-
-const clientIdFromUrl = useMemo(() => {
-  const qs = new URLSearchParams(location.search);
-  const id = qs.get("clientId") || qs.get("clientid");
-  return id ? Number(id) : null;
-}, [location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -360,6 +353,13 @@ function Inbox() {
   const highlightTimerRef = useRef(null);
 
   const selectedClientId = selectedClient?.id || null;
+const location = useLocation();
+
+const clientIdFromUrl = useMemo(() => {
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get("clientId") || qs.get("clientid");
+  return id ? Number(id) : null;
+}, [location.search]);
 
   // ✅ request browser notification permission once
   useEffect(() => {
@@ -448,19 +448,6 @@ function Inbox() {
         if (!cancelled) alert(err.message);
       }
     }
-useEffect(() => {
-  if (!clientIdFromUrl) return;
-  if (!Array.isArray(clients) || clients.length === 0) return;
-
-  // if already selected, do nothing
-  if (selectedClient?.id === clientIdFromUrl) return;
-
-  const target = clients.find((c) => c.id === clientIdFromUrl);
-  if (target) {
-    handleSelectClient(target); // uses your existing logic + clears unread
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [clientIdFromUrl, clients]);
 
     loadStatuses();
     fetchClientsOnce();
@@ -780,6 +767,17 @@ useEffect(() => {
     // clear unread when opening the chat
     setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
   };
+useEffect(() => {
+  if (!clientIdFromUrl) return;
+  if (!Array.isArray(clients) || clients.length === 0) return;
+
+  // already selected
+  if (Number(selectedClient?.id) === Number(clientIdFromUrl)) return;
+
+  const target = clients.find((c) => Number(c.id) === Number(clientIdFromUrl));
+  if (target) handleSelectClient(target);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [clientIdFromUrl, clients]);
 
   const jumpToClient = (clientId) => {
     const target = (Array.isArray(clients) ? clients : []).find((c) => c.id === clientId);
