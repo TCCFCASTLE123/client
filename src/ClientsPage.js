@@ -32,6 +32,8 @@ export default function ClientsPage() {
   const [language, setLanguage] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [sortBy, setSortBy] = useState("recent"); // recent | name
+const [icFilter, setIcFilter] = useState("all");
+const [apptSetterFilter, setApptSetterFilter] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +107,17 @@ export default function ClientsPage() {
   const filtered = useMemo(() => {
     const list = Array.isArray(clients) ? clients : [];
     const needle = (q || "").trim().toLowerCase().replace(/\D/g, (m) => m);
+const icOptions = useMemo(() => {
+  const set = new Set();
+  (clients || []).forEach(c => c.ic && set.add(c.ic));
+  return Array.from(set).sort();
+}, [clients]);
+
+const apptSetterOptions = useMemo(() => {
+  const set = new Set();
+  (clients || []).forEach(c => c.appt_setter && set.add(c.appt_setter));
+  return Array.from(set).sort();
+}, [clients]);
 
     let out = list.filter((c) => {
       // search
@@ -131,6 +144,9 @@ export default function ClientsPage() {
       if (office && String(c.office || "") !== String(office)) return false;
       if (caseType && String(c.case_type || "") !== String(caseType)) return false;
       if (language && String(c.language || "") !== String(language)) return false;
+if (icFilter !== "all" && c.ic !== icFilter) return false;
+if (apptSetterFilter !== "all" && c.appt_setter !== apptSetterFilter) return false;
+
 
       if (unreadOnly) {
         const unread = Number(c.unreadCount || 0);
@@ -146,6 +162,8 @@ export default function ClientsPage() {
     } else {
       out.sort((a, b) => safeTime(b.last_message_at || b.lastMessageAt) - safeTime(a.last_message_at || a.lastMessageAt));
     }
+if (sort === "ic") return (a.ic || "").localeCompare(b.ic || "");
+if (sort === "appt_setter") return (a.appt_setter || "").localeCompare(b.appt_setter || "");
 
     return out;
   }, [clients, q, statusId, office, caseType, language, unreadOnly, sortBy]);
@@ -251,6 +269,8 @@ export default function ClientsPage() {
               </option>
             ))}
           </select>
+<option value="ic">IC</option>
+<option value="appt_setter">Appt Setter</option>
 
           <select
             value={caseType}
@@ -264,6 +284,15 @@ export default function ClientsPage() {
               </option>
             ))}
           </select>
+<select value={icFilter} onChange={(e) => setIcFilter(e.target.value)}>
+  <option value="all">IC (all)</option>
+  {icOptions.map(v => <option key={v} value={v}>{v}</option>)}
+</select>
+
+<select value={apptSetterFilter} onChange={(e) => setApptSetterFilter(e.target.value)}>
+  <option value="all">Appt Setter (all)</option>
+  {apptSetterOptions.map(v => <option key={v} value={v}>{v}</option>)}
+</select>
 
           <select
             value={language}
