@@ -59,7 +59,8 @@ function App() {
         }} />
         <main style={{ minHeight: "80vh" }}>
           <Routes>
-            <Route path="/" element={<Inbox />} />
+         <Route path="/" element={<Inbox />} />
+<Route path="/inbox" element={<Inbox />} />
             <Route path="/admin/templates" element={<AdminTemplates />} />
             <Route path="/admin/templates/new" element={<TemplateFormPage />} />
             <Route path="/admin/templates/:id" element={<TemplateFormPage />} />
