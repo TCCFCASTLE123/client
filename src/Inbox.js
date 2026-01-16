@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { io } from "socket.io-client";
+import { useLocation } from "react-router-dom";
 
 function canonicalPhone(input) {
   if (!input) return "";
@@ -111,6 +112,13 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+const location = useLocation();
+
+const clientIdFromUrl = useMemo(() => {
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get("clientId") || qs.get("clientid");
+  return id ? Number(id) : null;
+}, [location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
