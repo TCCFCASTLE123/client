@@ -649,5 +649,22 @@ body { overflow-y: auto; overflow-x: hidden; }
   background: #e5e7eb !important;
   color: #111827 !important;
 }
+/* Top nav links */
+.app-header nav a,
+.app-header nav a:visited {
+  color: #e2e8f0;           /* light text */
+  text-decoration: none;
+}
+
+.app-header nav a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.app-header nav a.active {
+  color: #ffffff;
+  font-weight: 800;
+}
+
 
 
