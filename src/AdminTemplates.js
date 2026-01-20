@@ -11,13 +11,13 @@ const fieldLabel = (v, fallback = "Any") => (v && String(v).trim() ? String(v).t
 const norm = (v) => String(v || "").trim();
 
 function groupKey(t) {
-  // rule bucket
   return [
     norm(t.status),
     norm(t.language),
     norm(t.case_type),
     norm(t.office),
     norm(t.appointment_type),
+    norm(t.attorney_assigned), // 👈 REQUIRED
   ].join("||");
 }
 
@@ -112,15 +112,17 @@ export default function AdminTemplatesPage() {
       const activeCount = rows.filter((r) => Number(r.active) === 1).length;
 
       return {
-        key: k,
-        status: norm(head.status),
-        language: norm(head.language),
-        case_type: norm(head.case_type),
-        office: norm(head.office),
-        appointment_type: norm(head.appointment_type),
-        steps: rows,
-        activeCount,
-      };
+  key: k,
+  status: norm(head.status),
+  language: norm(head.language),
+  case_type: norm(head.case_type),
+  office: norm(head.office),
+  appointment_type: norm(head.appointment_type),
+  attorney_assigned: norm(head.attorney_assigned), // 👈 ADD THIS
+  steps: rows,
+  activeCount,
+};
+
     });
 
     // sort rules: status, language, case_type, office
@@ -436,7 +438,8 @@ export default function AdminTemplatesPage() {
               >
                 <div style={{ fontWeight: 900, fontSize: 14, color: "#0f172a" }}>
                   {fieldLabel(r.status, "Any Status")} • {fieldLabel(r.language, "Any Lang")} •{" "}
-                  {fieldLabel(r.case_type, "Any Case")}
+                  {fieldLabel(r.case_type, "Any Case")} {fieldLabel(r.attorney_assigned, "Any Attorney")}
+
                 </div>
 
                 <div style={{ color: "#64748b", fontWeight: 800, fontSize: 13 }}>
