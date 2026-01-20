@@ -200,10 +200,21 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
           <input className="cc-field" type="text" value={apptTime || ""} onChange={(e) => setApptTime(e.target.value)} placeholder="6:00 PM" />
         </div>
 
-        <div className="cc-row">
-          <input className="cc-field" placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} />
-          <input className="cc-field" placeholder="I.C." value={ic} onChange={(e) => setIc(e.target.value)} />
-        </div>
+     <div className="cc-row">
+  <input className="cc-field" placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} />
+  <input className="cc-field" placeholder="I.C." value={ic} onChange={(e) => setIc(e.target.value)} />
+</div>
+
+<div className="cc-row">
+  <input
+    className="cc-field"
+    placeholder="Assigned Attorney"
+    value={attorneyAssigned}
+    onChange={(e) => setAttorneyAssigned(e.target.value)}
+  />
+  <div />
+</div>
+
 
         <div className="cc-row">
           <input className="cc-field" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
