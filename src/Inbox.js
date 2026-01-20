@@ -11,13 +11,13 @@ function canonicalPhone(input) {
   if (digits.length === 10) return digits;
   return digits;
 }
+
 function formatPhoneUS(input) {
   const d = String(input || "").replace(/\D/g, "");
   const ten = d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
   if (ten.length !== 10) return input || "";
   return `${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`;
 }
-
 
 /** =========================
  * STATUS COLORS (border + pill)
@@ -27,17 +27,19 @@ function statusThemeByName(nameRaw) {
 
   const MAP = {
     "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
-    "Set": { border: "#cbd5e1", pillBg: "#f1f5f9", pillText: "#334155" },
+    Set: { border: "#cbd5e1", pillBg: "#f1f5f9", pillText: "#334155" },
     "Attempted/Unsuccessful": { border: "#55c7da", pillBg: "#d9f6fb", pillText: "#0b5c6a" },
     "Working To Set": { border: "#a78bfa", pillBg: "#ede9fe", pillText: "#5b21b6" },
-    "Showed": { border: "#94a3b8", pillBg: "#e2e8f0", pillText: "#475569" },
+    Showed: { border: "#94a3b8", pillBg: "#e2e8f0", pillText: "#475569" },
     "Did Not Retain": { border: "#f59e0b", pillBg: "#ffedd5", pillText: "#92400e" },
     "No Money": { border: "#6b7280", pillBg: "#e5e7eb", pillText: "#374151" },
-    "Retained": { border: "#22c55e", pillBg: "#dcfce7", pillText: "#166534" },
-    "Pending": { border: "#fbbf24", pillBg: "#fef9c3", pillText: "#854d0e" },
+    Retained: { border: "#22c55e", pillBg: "#dcfce7", pillText: "#166534" },
+    Pending: { border: "#fbbf24", pillBg: "#fef9c3", pillText: "#854d0e" },
+
     "Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
     "Seen Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
     "Referred Out": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
+    "No Longer Needs Assistance": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
   };
 
   return MAP[name] || { border: "#e2e8f0", pillBg: "#f1f5f9", pillText: "#334155" };
@@ -351,6 +353,18 @@ function Inbox() {
     const id = qs.get("clientId") || qs.get("clientid");
     return id ? Number(id) : null;
   }, [location.search]);
+
+  // Statuses that should NOT appear in Inbox list
+  const HIDE_FROM_INBOX_STATUSES = useMemo(
+    () =>
+      new Set([
+        "Referred Out",
+        "Can't Help",
+        "No Longer Needs Assistance",
+        "Seen Can't Help",
+      ]),
+    []
+  );
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "default") {
@@ -731,15 +745,27 @@ function Inbox() {
     return found ? found.name : "";
   };
 
-  const filteredClients = useMemo(() => {
+  // This is the actual list used for the LEFT sidebar
+  // - hides those statuses
+  // - applies search
+  const inboxClients = useMemo(() => {
     const list = Array.isArray(clients) ? clients : [];
-    return list.filter(
-      (c) =>
-        !search ||
-        (c.name && c.name.toLowerCase().includes(search.toLowerCase())) ||
-        (c.phone && c.phone.replace(/\D/g, "").includes(search.replace(/\D/g, "")))
-    );
-  }, [clients, search]);
+    const q = (search || "").trim().toLowerCase();
+    const qDigits = q.replace(/\D/g, "");
+
+    return list.filter((c) => {
+      const statusName = c.status_id ? getStatusName(c.status_id) : "";
+      if (statusName && HIDE_FROM_INBOX_STATUSES.has(statusName)) return false;
+
+      if (!q) return true;
+
+      const nameMatch = (c.name || "").toLowerCase().includes(q);
+      const phoneDigits = String(c.phone || "").replace(/\D/g, "");
+      const phoneMatch = qDigits ? phoneDigits.includes(qDigits) : false;
+
+      return nameMatch || phoneMatch;
+    });
+  }, [clients, search, statuses, HIDE_FROM_INBOX_STATUSES]);
 
   const handleSelectClient = (client) => {
     setSelectedClient(client);
@@ -769,20 +795,18 @@ function Inbox() {
     <>
       <ToastBanner toast={toast} onClose={() => setToast((t) => ({ ...t, show: false }))} onJump={jumpToClient} />
 
-<div
-  className="inbox-container"
-  style={{
-    display: "flex",
-    minHeight: 600,
-    height: "calc(100vh - 190px)",
-    width: "calc(100vw - 40px)",     // use almost full width
-    maxWidth: 1600,                  // still prevents ultra-wide weirdness
-    margin: "20px auto",
-    overflow: "hidden",
-  }}
->
-
-
+      <div
+        className="inbox-container"
+        style={{
+          display: "flex",
+          minHeight: 600,
+          height: "calc(100vh - 190px)",
+          width: "calc(100vw - 40px)", // use almost full width
+          maxWidth: 1600, // still prevents ultra-wide weirdness
+          margin: "20px auto",
+          overflow: "hidden",
+        }}
+      >
         {/* LEFT: Client list */}
         <aside
           className="inbox-sidebar"
@@ -830,7 +854,7 @@ function Inbox() {
           />
 
           <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
-            {filteredClients.map((client) => {
+            {inboxClients.map((client) => {
               const statusName = client.status_id ? getStatusName(client.status_id) : "";
               const theme = statusThemeByName(statusName);
 
@@ -895,9 +919,9 @@ function Inbox() {
                     )}
                   </div>
 
-                 <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
-  {formatPhoneUS(client.phone) || "No phone"}
-</div>
+                  <div style={{ fontSize: 13, color: "#475569", marginTop: 4 }}>
+                    {formatPhoneUS(client.phone) || "No phone"}
+                  </div>
                 </li>
               );
             })}
@@ -962,7 +986,7 @@ function Inbox() {
               {/* 2-column */}
               <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
                 {/* LEFT: messages + input */}
-              <div style={{ flex: 1, minWidth: 650, display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, minWidth: 650, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
@@ -1086,25 +1110,23 @@ function Inbox() {
                 </div>
 
                 {/* RIGHT: details */}
-         <div
-  style={{
-    width: 260,
-    flex: "0 0 260px",
-    background: "#fff",
-    border: "1px solid #e2e8f0",
-    borderRadius: 12,
-    padding: 12,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-    height: "fit-content",
-  }}
->
-
+                <div
+                  style={{
+                    width: 260,
+                    flex: "0 0 260px",
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: 12,
+                    padding: 12,
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    height: "fit-content",
+                  }}
+                >
                   <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
 
-             <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
-  {formatPhoneUS(selectedClient.phone) || "No phone"}
-</div>
-
+                  <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
+                    {formatPhoneUS(selectedClient.phone) || "No phone"}
+                  </div>
 
                   <div style={{ marginTop: 10 }}>
                     <select
