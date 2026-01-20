@@ -20,7 +20,8 @@ function Clients({ initialData = {}, onClose, onSave }) {
   const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
   const [intakeCoordinator, setIntakeCoordinator] = useState(
     initialData.intake_coordinator || ""
-  );
+  ); const [attorneyAssigned, setAttorneyAssigned] = useState(initialData.attorney_assigned || "");
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
