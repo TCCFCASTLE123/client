@@ -148,6 +148,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
     if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
     if (apptSetter && apptSetter.trim()) payload.appt_setter = apptSetter.trim();
     if (ic && ic.trim()) payload.ic = ic.trim();
+if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = attorneyAssigned.trim();
 
     try {
       setSaving(true);
