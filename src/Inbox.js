@@ -114,6 +114,7 @@ function ClientForm({ initialData = {}, onClose, onSave }) {
   const [apptTime, setApptTime] = useState(initialData.appt_time || "");
   const [apptSetter, setApptSetter] = useState(initialData.appt_setter || "");
   const [ic, setIc] = useState(initialData.ic || "");
+const [attorneyAssigned, setAttorneyAssigned] = useState(initialData.attorney_assigned || "");
 
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
