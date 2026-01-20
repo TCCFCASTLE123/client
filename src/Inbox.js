@@ -1192,6 +1192,12 @@ function Inbox() {
                         <b>Email:</b> {selectedClient.email}
                       </div>
                     )}
+{selectedClient.attorney_assigned && (
+  <div>
+    <b>Assigned Attorney:</b> {selectedClient.attorney_assigned}
+  </div>
+)}
+
                     {selectedClient.notes && (
                       <div>
                         <b>Notes:</b> {selectedClient.notes}
