@@ -88,6 +88,7 @@ export default function AdminTemplatesPage() {
           t.case_type,
           t.office,
           t.appointment_type,
+           t.attorney_assigned, 
           t.template,
           t.delay_hours,
           t.id,
@@ -205,16 +206,18 @@ export default function AdminTemplatesPage() {
   async function saveTemplate() {
     if (!editing) return;
 
-    const payload = {
-      status: norm(editing.status),
-      office: norm(editing.office),
-      case_type: norm(editing.case_type),
-      appointment_type: norm(editing.appointment_type),
-      language: norm(editing.language),
-      delay_hours: Number(editing.delay_hours || 0),
-      template: String(editing.template || "").trim(),
-      active: editing.active ? 1 : 0,
-    };
+const payload = {
+  status: norm(editing.status),
+  office: norm(editing.office),
+  case_type: norm(editing.case_type),
+  appointment_type: norm(editing.appointment_type),
+  language: norm(editing.language),
+  attorney_assigned: norm(editing.attorney_assigned), // ✅ ADD THIS
+  delay_hours: Number(editing.delay_hours || 0),
+  template: String(editing.template || "").trim(),
+  active: editing.active ? 1 : 0,
+};
+
 
     if (!payload.template) {
       setErr("Template message required.");
@@ -294,16 +297,18 @@ export default function AdminTemplatesPage() {
     );
 
     try {
-      const payload = {
-        status: norm(row.status),
-        office: norm(row.office),
-        case_type: norm(row.case_type),
-        appointment_type: norm(row.appointment_type),
-        language: norm(row.language),
-        delay_hours: Number(row.delay_hours || 0),
-        template: String(row.template || "").trim(),
-        active: nextActive ? 1 : 0,
-      };
+   const payload = {
+  status: norm(row.status),
+  office: norm(row.office),
+  case_type: norm(row.case_type),
+  appointment_type: norm(row.appointment_type),
+  language: norm(row.language),
+  attorney_assigned: norm(row.attorney_assigned), // ✅ ADD THIS
+  delay_hours: Number(row.delay_hours || 0),
+  template: String(row.template || "").trim(),
+  active: nextActive ? 1 : 0,
+};
+
 
       const res = await fetch(`${API}/api/templates/${row.id}`, {
         method: "PUT",
