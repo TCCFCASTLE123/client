@@ -10,7 +10,7 @@ const BLANK = {
   delay_hours: 0,
   template: "",
   active: 1,
-  attorney_assigned: "",
+  attorney_assigned: "", // ✅ ADD
 };
 
 function getToken() {
@@ -27,7 +27,6 @@ export default function TemplateFormPage() {
   // Load existing template if editing
   useEffect(() => {
     if (!id) return;
-    // If you use /new route, it won't hit this file with an id. If you do, keep this guard:
     if (String(id) === "new") return;
 
     setLoading(true);
@@ -41,6 +40,7 @@ export default function TemplateFormPage() {
           ...data,
           active: Number(data?.active) ? 1 : 0,
           delay_hours: Number(data?.delay_hours || 0),
+          attorney_assigned: String(data?.attorney_assigned || ""), // ✅ KEEP
         });
       })
       .catch(() => {
@@ -69,7 +69,7 @@ export default function TemplateFormPage() {
         delay_hours: Number(form.delay_hours || 0),
         template: String(form.template || "").trim(),
         active: form.active ? 1 : 0,
-        attorney_assigned: String(form.attorney_assigned || "").trim(),
+        attorney_assigned: String(form.attorney_assigned || "").trim(), // ✅ SEND
       };
 
       const res = await fetch(url, {
@@ -81,7 +81,10 @@ export default function TemplateFormPage() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to save template");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(txt || "Failed to save template");
+      }
 
       navigate("/admin/templates");
     } catch (err) {
@@ -93,10 +96,14 @@ export default function TemplateFormPage() {
 
   if (loading) return <div style={{ padding: 24 }}>Loading…</div>;
 
+  const isEditing = !!id && String(id) !== "new";
+
   return (
     <div style={{ maxWidth: 900, margin: "24px auto", padding: 16 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <div style={{ fontSize: 18, fontWeight: 900 }}>{id ? "Edit Template Step" : "Add Template Step"}</div>
+        <div style={{ fontSize: 18, fontWeight: 900 }}>
+          {isEditing ? "Edit Template Step" : "Add Template Step"}
+        </div>
         <button
           onClick={() => navigate("/admin/templates")}
           style={{
@@ -139,7 +146,8 @@ export default function TemplateFormPage() {
             />
           </Field>
         </div>
-       {/* ✅ Attorney Assigned row */}
+
+        {/* ✅ Attorney Assigned row */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 12 }}>
           <Field label="Assigned Attorney (rule)">
             <input
@@ -152,6 +160,7 @@ export default function TemplateFormPage() {
 
           <div />
         </div>
+
         <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center" }}>
           <Field label="Delay (hours)" style={{ flex: 1 }}>
             <input
