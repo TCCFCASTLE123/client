@@ -666,7 +666,7 @@ export default function AdminTemplatesPage() {
                 </div>
               )}
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(6, minmax(0, 1fr))", gap: 10 }}>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 900, color: "#334155", marginBottom: 6 }}>Status</div>
                   <input
@@ -682,6 +682,15 @@ export default function AdminTemplatesPage() {
                     ))}
                   </datalist>
                 </div>
+<div>
+  <div style={{ fontSize: 12, fontWeight: 900, color: "#334155", marginBottom: 6 }}>Assigned Attorney</div>
+  <input
+    value={editing.attorney_assigned || ""}
+    onChange={(e) => setEditing((p) => ({ ...p, attorney_assigned: e.target.value }))}
+    placeholder="(blank = any)"
+    style={fieldStyle}
+  />
+</div>
 
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 900, color: "#334155", marginBottom: 6 }}>Language</div>
