@@ -10,6 +10,7 @@ const BLANK = {
   delay_hours: 0,
   template: "",
   active: 1,
+  attorney_assigned: "",
 };
 
 function getToken() {
@@ -68,6 +69,7 @@ export default function TemplateFormPage() {
         delay_hours: Number(form.delay_hours || 0),
         template: String(form.template || "").trim(),
         active: form.active ? 1 : 0,
+        attorney_assigned: String(form.attorney_assigned || "").trim(),
       };
 
       const res = await fetch(url, {
@@ -137,7 +139,19 @@ export default function TemplateFormPage() {
             />
           </Field>
         </div>
+       {/* ✅ Attorney Assigned row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 12 }}>
+          <Field label="Assigned Attorney (rule)">
+            <input
+              value={form.attorney_assigned || ""}
+              onChange={(e) => setForm((p) => ({ ...p, attorney_assigned: e.target.value }))}
+              style={fieldStyle}
+              placeholder="e.g., Blake Mayes"
+            />
+          </Field>
 
+          <div />
+        </div>
         <div style={{ display: "flex", gap: 10, marginTop: 12, alignItems: "center" }}>
           <Field label="Delay (hours)" style={{ flex: 1 }}>
             <input
