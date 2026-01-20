@@ -1,3 +1,4 @@
+// DEPLOY CHECK: TemplateFormPage export present
 import React, { useEffect, useMemo, useState } from "react";
 
 function getToken() {
