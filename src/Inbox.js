@@ -22,8 +22,7 @@ function formatPhoneUS(input) {
 /** =========================
  * STATUS COLORS (border + pill)
  * ========================= */
-function statusThemeByName(nameRaw) {
-  const name = String(nameRaw || "").trim();
+
 
   const MAP = {
     "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
@@ -264,9 +263,6 @@ if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = att
   );
 }
 
-useEffect(() => {
-  selectedClientIdRef.current = selectedClient?.id || null;
-}, [selectedClient]);
 
 /** =========================
  * Toast / Banner
@@ -347,6 +343,8 @@ function Inbox() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+const socketRef = useRef(null);
+const selectedClientIdRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
@@ -602,6 +600,9 @@ function Inbox() {
       cancelled = true;
     };
   }, [selectedClient]);
+useEffect(() => {
+  selectedClientIdRef.current = selectedClient?.id || null;
+}, [selectedClient]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
