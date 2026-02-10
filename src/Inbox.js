@@ -44,6 +44,8 @@ function statusThemeByName(nameRaw) {
 
   return MAP[name] || { border: "#e2e8f0", pillBg: "#f1f5f9", pillText: "#334155" };
 }
+const socketRef = useRef(null);
+const selectedClientIdRef = useRef(null);
 
 /* =========================
    Tiny beep (no audio file)
@@ -262,6 +264,10 @@ if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = att
   );
 }
 
+useEffect(() => {
+  selectedClientIdRef.current = selectedClient?.id || null;
+}, [selectedClient]);
+
 /** =========================
  * Toast / Banner
  * ========================= */
@@ -474,76 +480,80 @@ function Inbox() {
   }, []);
 
   // Socket listeners
-  useEffect(() => {
-    const socket = io(process.env.REACT_APP_API_URL, {
-      transports: ["websocket"],
-      auth: { token: getToken() },
+ useEffect(() => {
+  if (socketRef.current) return;
+
+  const socket = io(process.env.REACT_APP_API_URL, {
+    path: "/socket.io",
+    transports: ["polling", "websocket"], // allow Render fallback
+    auth: { token: getToken() },
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+  });
+
+  socketRef.current = socket;
+
+  const onAnyMessage = (msg) => {
+    if (!msg || !msg.client_id) return;
+
+    const msgClientId = msg.client_id;
+    const isInbound = msg.direction === "inbound" || msg.sender === "client";
+    const isViewingThisChat =
+      selectedClientIdRef.current === msgClientId;
+
+    if (isViewingThisChat) {
+      setMessages((prev) => [...prev, msg]);
+    }
+
+    setClients((prev) => {
+      const next = [...prev];
+      const idx = next.findIndex((c) => c.id === msgClientId);
+      if (idx === -1) return prev;
+
+      const old = next[idx];
+      const updated = {
+        ...old,
+        lastMessageAt: msg.timestamp || new Date().toISOString(),
+        lastMessageText: msg.text || "",
+        unreadCount:
+          isInbound && !isViewingThisChat
+            ? (old.unreadCount || 0) + 1
+            : old.unreadCount || 0,
+      };
+
+      next.splice(idx, 1);
+      next.unshift(updated);
+      return next;
     });
 
-    const onAnyMessage = (msg) => {
-      if (!msg) return;
+    if (isInbound && !isViewingThisChat) {
+      playBeep();
+      showToast(
+        `${msg.client_name || "Client"}: ${(msg.text || "").slice(0, 90)}`,
+        msgClientId
+      );
+      flashClient(msgClientId);
+    }
+  };
 
-      const msgClientId = msg.client_id;
-      if (!msgClientId) return;
+  socket.on("newMessage", onAnyMessage);
+  socket.on("message", onAnyMessage);
+  socket.on("message:new", onAnyMessage);
 
-      const isInbound = msg.direction === "inbound" || msg.sender === "client";
-      const isViewingThisChat = selectedClientId === msgClientId;
+  socket.on("connect_error", (err) => {
+    console.warn("Socket connect error:", err.message);
+  });
 
-      if (isViewingThisChat) {
-        setMessages((prev) => [...(Array.isArray(prev) ? prev : []), msg]);
-      }
+  return () => {
+    socket.off("newMessage", onAnyMessage);
+    socket.off("message", onAnyMessage);
+    socket.off("message:new", onAnyMessage);
+    socket.disconnect();
+    socketRef.current = null;
+  };
+}, []);
 
-      setClients((prev) => {
-        const next = [...(Array.isArray(prev) ? prev : [])];
-        const idx = next.findIndex((c) => c.id === msgClientId);
-        if (idx === -1) return prev;
-
-        const old = next[idx];
-        const updated = {
-          ...old,
-          lastMessageAt: msg.timestamp || new Date().toISOString(),
-          lastMessageText: msg.text || "",
-          unreadCount: isInbound && !isViewingThisChat ? (old.unreadCount || 0) + 1 : old.unreadCount || 0,
-        };
-
-        next.splice(idx, 1);
-        next.unshift(updated);
-        return next;
-      });
-
-      if (isInbound && !isViewingThisChat) {
-        playBeep();
-
-        const clientName =
-          msg.client_name ||
-          (Array.isArray(clients) ? clients.find((c) => c.id === msgClientId)?.name : null) ||
-          "Client";
-
-        showToast(`${clientName}: ${(msg.text || "").slice(0, 90)}`, msgClientId);
-        flashClient(msgClientId);
-
-        if ("Notification" in window && Notification.permission === "granted") {
-          try {
-            new Notification(`New text from ${clientName}`, {
-              body: (msg.text || "").slice(0, 140) || "New message",
-            });
-          } catch {}
-        }
-      }
-    };
-
-    socket.on("newMessage", onAnyMessage);
-    socket.on("message", onAnyMessage);
-    socket.on("message:new", onAnyMessage);
-
-    return () => {
-      socket.off("newMessage", onAnyMessage);
-      socket.off("message", onAnyMessage);
-      socket.off("message:new", onAnyMessage);
-      socket.disconnect();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClientId]);
 
   // Fetch messages when selecting client
   useEffect(() => {
