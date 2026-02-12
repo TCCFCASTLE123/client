@@ -358,7 +358,7 @@ const selectedClientIdRef = useRef(null);
   const [showClientForm, setShowClientForm] = useState(false);
   const [editClientData, setEditClientData] = useState(null);
   const [search, setSearch] = useState("");
-
+  const [selectedFile, setSelectedFile] = useState(null);
   const messagesEndRef = useRef(null);
 
   const [toast, setToast] = useState({ show: false, text: "", clientId: null });
@@ -1101,40 +1101,67 @@ useEffect(() => {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  <form onSubmit={handleSend} style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                    <input
-                      type="text"
-                      placeholder="Type your message..."
-                      value={newMsg}
-                      onChange={(e) => setNewMsg(e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: 13,
-                        borderRadius: 19,
-                        border: "1px solid #bfc8da",
-                        fontSize: 15,
-                        outline: "none",
-                      }}
-                      disabled={!selectedClient}
-                    />
-                    <button
-                      type="submit"
-                      style={{
-                        padding: "0 24px",
-                        borderRadius: 19,
-                        border: "none",
-                        background: "#6366f1",
-                        color: "#fff",
-                        fontWeight: 900,
-                        fontSize: 16,
-                        cursor: "pointer",
-                        opacity: !newMsg.trim() ? 0.7 : 1,
-                      }}
-                      disabled={!newMsg.trim()}
-                    >
-                      Send
-                    </button>
-                  </form>
+           <form
+  onSubmit={handleSend}
+  style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center" }}
+>
+  {/* Text input */}
+  <input
+    type="text"
+    placeholder="Type your message..."
+    value={newMsg}
+    onChange={(e) => setNewMsg(e.target.value)}
+    style={{
+      flex: 1,
+      padding: 13,
+      borderRadius: 19,
+      border: "1px solid #bfc8da",
+      fontSize: 15,
+      outline: "none",
+    }}
+    disabled={!selectedClient}
+  />
+
+  {/* Image upload button */}
+  <label
+    style={{
+      padding: "10px 14px",
+      borderRadius: 19,
+      background: "#e2e8f0",
+      cursor: "pointer",
+      fontWeight: 700,
+      fontSize: 14,
+    }}
+  >
+    📎
+    <input
+      type="file"
+      style={{ display: "none" }}
+      onChange={(e) => setSelectedFile(e.target.files[0])}
+      disabled={!selectedClient}
+    />
+  </label>
+
+  {/* Send button */}
+  <button
+    type="submit"
+    style={{
+      padding: "0 24px",
+      borderRadius: 19,
+      border: "none",
+      background: "#6366f1",
+      color: "#fff",
+      fontWeight: 900,
+      fontSize: 16,
+      cursor: "pointer",
+      opacity: !newMsg.trim() && !selectedFile ? 0.7 : 1,
+    }}
+    disabled={!newMsg.trim() && !selectedFile}
+  >
+    Send
+  </button>
+</form>
+
                 </div>
 
                 {/* RIGHT: details */}
