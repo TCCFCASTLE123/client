@@ -626,66 +626,80 @@ useEffect(() => {
     }
   }, [newMsg]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!newMsg.trim()) return alert("Type a message first.");
-    if (!selectedClient) return alert("No client selected.");
+ const handleSend = async (e) => {
+  e.preventDefault();
 
-    const payload = { to: selectedClient.phone, text: newMsg, client_id: selectedClient.id };
+  if (!selectedClient) return alert("No client selected.");
 
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
-        },
-        body: JSON.stringify(payload),
-      });
+  try {
+    // =========================
+    // 1️⃣ Upload image first (if selected)
+    // =========================
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("client_id", selectedClient.id);
+
+      const uploadRes = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/messages/upload-image`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + getToken(),
+          },
+          body: formData,
+        }
+      );
+
+      if (uploadRes.status === 401 || uploadRes.status === 403) {
+        redirectToLogin();
+        return;
+      }
+
+      if (!uploadRes.ok) {
+        throw new Error(await uploadRes.text());
+      }
+
+      setSelectedFile(null);
+    }
+
+    // =========================
+    // 2️⃣ Send text message (if exists)
+    // =========================
+    if (newMsg.trim()) {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/messages/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + getToken(),
+          },
+          body: JSON.stringify({
+            client_id: selectedClient.id,
+            text: newMsg,
+          }),
+        }
+      );
 
       if (response.status === 401 || response.status === 403) {
         redirectToLogin();
         return;
       }
 
-      if (!response.ok) throw new Error((await response.text()) || "Failed to send message");
-
-      // Move this client to top immediately
-      setClients((prev) => {
-        const next = [...(Array.isArray(prev) ? prev : [])];
-        const idx = next.findIndex((c) => c.id === selectedClient.id);
-        if (idx === -1) return prev;
-
-        const old = next[idx];
-        const updated = { ...old, lastMessageAt: new Date().toISOString(), lastMessageText: payload.text };
-
-        next.splice(idx, 1);
-        next.unshift(updated);
-        return next;
-      });
-
-      // Refresh conversation
-      const res2 = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-        headers: { Authorization: "Bearer " + getToken() },
-      });
-
-      if (res2.status === 401 || res2.status === 403) {
-        redirectToLogin();
-        return;
+      if (!response.ok) {
+        throw new Error(await response.text());
       }
 
-      const data2 = await res2.json().catch(() => null);
-      const list2 = Array.isArray(data2) ? data2 : Array.isArray(data2?.messages) ? data2.messages : [];
-      setMessages(list2);
-
-      if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-
       setNewMsg("");
-    } catch (err) {
-      alert("Could not send message: " + (err.message || err));
-      console.error("Send error:", err);
     }
-  };
+
+  } catch (err) {
+    console.error("Send failed:", err);
+    alert("Failed to send message.");
+  }
+};
+
 
   const openAddClientForm = () => {
     setEditClientData(null);
@@ -1078,6 +1092,19 @@ useEffect(() => {
                             >
                               <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
                                 {msg.text}
+{msg.image_url && (
+  <img
+    src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
+    alt="attachment"
+    style={{
+      maxWidth: 250,
+      marginTop: 8,
+      borderRadius: 8,
+      display: "block",
+    }}
+  />
+)}
+
                               </div>
 
                               <div
