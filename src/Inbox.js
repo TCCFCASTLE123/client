@@ -353,6 +353,7 @@ const selectedClientIdRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+  const textareaRef = useRef(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
 
@@ -626,10 +627,24 @@ useEffect(() => {
       setTyping(false);
     }
   }, [newMsg]);
+useEffect(() => {
+  const el = textareaRef.current;
+  if (!el) return;
 
+  el.style.height = "auto";
+
+  const newHeight = Math.min(el.scrollHeight, 180); // max height cap
+  el.style.height = newHeight + "px";
+}, [newMsg]);
+}, [newMsg]);
  const handleSend = async (e) => {
   e.preventDefault();
 
+   useEffect(() => {
+  if (selectedClient && textareaRef.current) {
+    textareaRef.current.focus();
+  }
+}, [selectedClient]);
   if (!selectedClient) return alert("No client selected.");
 
   try {
@@ -1153,21 +1168,26 @@ useEffect(() => {
   style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center" }}
 >
   {/* Text input */}
-  <input
-    type="text"
-    placeholder="Type your message..."
-    value={newMsg}
-    onChange={(e) => setNewMsg(e.target.value)}
-    style={{
-      flex: 1,
-      padding: 13,
-      borderRadius: 19,
-      border: "1px solid #bfc8da",
-      fontSize: 15,
-      outline: "none",
-    }}
-    disabled={!selectedClient}
-  />
+<textarea
+  ref={textareaRef}
+  placeholder="Type your message..."
+  value={newMsg}
+  onChange={(e) => setNewMsg(e.target.value)}
+  rows={1}
+  style={{
+    flex: 1,
+    padding: 13,
+    borderRadius: 19,
+    border: "1px solid #bfc8da",
+    fontSize: 15,
+    outline: "none",
+    resize: "none",
+    overflowY: "auto",
+    maxHeight: 180,
+  transition: "height 0.12s cubic-bezier(.4,0,.2,1)",
+  }}
+  disabled={!selectedClient}
+/>
 
   {/* Image upload button */}
   <label
