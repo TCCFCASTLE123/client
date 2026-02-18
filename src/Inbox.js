@@ -627,7 +627,8 @@ useEffect(() => {
       setTyping(false);
     }
   }, [newMsg]);
-useEffect(() => {
+
+  useEffect(() => {
   const el = textareaRef.current;
   if (!el) return;
 
@@ -636,15 +637,16 @@ useEffect(() => {
   const newHeight = Math.min(el.scrollHeight, 180); // max height cap
   el.style.height = newHeight + "px";
 }, [newMsg]);
-}, [newMsg]);
- const handleSend = async (e) => {
-  e.preventDefault();
 
-   useEffect(() => {
+  useEffect(() => {
   if (selectedClient && textareaRef.current) {
     textareaRef.current.focus();
   }
 }, [selectedClient]);
+  
+ const handleSend = async (e) => {
+  e.preventDefault();
+
   if (!selectedClient) return alert("No client selected.");
 
   try {
