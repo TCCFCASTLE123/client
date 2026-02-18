@@ -240,6 +240,7 @@ if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = att
             <option value="Criminal">Criminal</option>
             <option value="Immigration">Immigration</option>
             <option value="Bankruptcy">Bankruptcy</option>
+      <option value="Personal Injury">Personal Injury</option>
           </select>
           <input className="cc-field" placeholder="Sub Case Type" value={caseSubtype} onChange={(e) => setCaseSubtype(e.target.value)} />
         </div>
