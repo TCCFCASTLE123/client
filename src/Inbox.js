@@ -1091,22 +1091,41 @@ useEffect(() => {
                                 boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
                               }}
                             >
-                              <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
-                                {msg.text}
-{msg.image_url && (
-  <img
-    src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
-    alt="attachment"
-    style={{
-      maxWidth: 250,
-      marginTop: 8,
-      borderRadius: 8,
-      display: "block",
-    }}
-  />
-)}
+                         <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
+  {msg.text}
 
-                              </div>
+  {msg.image_url && (
+    <>
+      <img
+        src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
+        alt="attachment"
+        style={{
+          maxWidth: 250,
+          marginTop: 8,
+          borderRadius: 8,
+          display: "block",
+        }}
+      />
+
+      <a
+        href={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
+        download
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: "inline-block",
+          marginTop: 6,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#4f46e5",
+          textDecoration: "none",
+        }}
+      >
+        ⬇ Download
+      </a>
+    </>
+  )}
+</div>
 
                               <div
                                 className="message-timestamp"
