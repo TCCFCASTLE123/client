@@ -1080,8 +1080,8 @@ const handleSelectClient = (client) => {
   </button>
 
 </div>
-              {/* 2-column */}
-             <div
+    {/* 2-column */}
+<div
   style={{
     display: "flex",
     gap: 14,
@@ -1089,213 +1089,139 @@ const handleSelectClient = (client) => {
     minWidth: 0,
   }}
 >
-              <div
-  className="messages"
-  style={{
-    background: "#f4f7fa",
-    borderRadius: 12,
-    padding: 18,
-    flex: 1,
-    minWidth: 0,
-    display: "flex",
-    flexDirection: "column",
-    overflowY: "auto",
-    boxShadow: "0 1px 4px #e0e7ef",
-  }}
->
-                    {loadingMessages && <div>Loading messages...</div>}
-                    {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
-                      <div className="no-messages" style={{ color: "#aaa" }}>
-                        No messages yet!
-                      </div>
-                    )}
+  {/* LEFT: Messages */}
+  <div
+    className="messages"
+    style={{
+      background: "#f4f7fa",
+      borderRadius: 12,
+      padding: 18,
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      overflowY: "auto",
+      boxShadow: "0 1px 4px #e0e7ef",
+    }}
+  >
+    {loadingMessages && <div>Loading messages...</div>}
 
-                    {(() => {
-                      let lastDate = null;
+    {!loadingMessages &&
+      (Array.isArray(messages) ? messages : []).length === 0 && (
+        <div style={{ color: "#aaa" }}>No messages yet!</div>
+      )}
 
-                      return (Array.isArray(messages) ? messages : []).map((msg, i) => {
-                        const msgDate = safeDate(msg.timestamp);
+    {(Array.isArray(messages) ? messages : []).map((msg, i) => {
+      const msgDate = safeDate(msg.timestamp);
+      const isSystem = msg.sender === "system";
+      const isOutbound =
+        msg.direction === "outbound" || msg.sender === "me";
 
-                        const showDate =
-                          !lastDate ||
-                          !(
-                            msgDate.getFullYear() === lastDate.getFullYear() &&
-                            msgDate.getMonth() === lastDate.getMonth() &&
-                            msgDate.getDate() === lastDate.getDate()
-                          );
+      const bubbleClass = isSystem
+        ? "system"
+        : isOutbound
+        ? "me"
+        : "client";
 
-                        if (showDate) lastDate = msgDate;
+      return (
+        <div
+          key={i}
+          className={`message ${bubbleClass}`}
+          style={{
+            background: isSystem ? "#f1f5f9" : undefined,
+            border: isSystem ? "1px solid #e2e8f0" : undefined,
+            color: isSystem ? "#6d28d9" : undefined,
+            padding: "8px 14px",
+            borderRadius: 14,
+            margin: "8px 0",
+            maxWidth: "70%",
+            width: "fit-content",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          }}
+        >
+          <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 11,
+              opacity: 0.7,
+            }}
+          >
+            {format(msgDate, "h:mm a")}
+          </div>
+        </div>
+      );
+    })}
 
-                        const isSystem = msg.sender === "system";
-                        const isOutbound = msg.direction === "outbound" || msg.sender === "me";
-                        const bubbleClass = isSystem ? "system" : isOutbound ? "me" : "client";
+    <div ref={messagesEndRef} />
 
-                        let footer = "";
-                        if (isSystem) footer = `Automated • ${format(msgDate, "h:mm a")}`;
-                        else if (isOutbound) footer = `Sent by ${prettyName(msg.sender) || "Agent"} • ${format(msgDate, "h:mm a")}`;
-                        else footer = `Received • ${format(msgDate, "h:mm a")}`;
-
-                        return (
-                          <React.Fragment key={i}>
-                            {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
-
-                        <div
-  className={`message ${bubbleClass}`}
-  style={{
-    background: isSystem ? "#f1f5f9" : undefined,
-    border: isSystem ? "1px solid #e2e8f0" : undefined,
-    color: isSystem ? "#6d28d9" : undefined,
-    padding: isSystem ? "10px 14px" : "7px 16px",
-    borderRadius: isSystem ? 16 : 10,
-    margin: "8px 0",
-    maxWidth: "70%",
-    width: "fit-content",
-    wordBreak: "break-word",
-    overflowWrap: "anywhere",
-  }}
->
-                         <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
-  {msg.text}
-
-  {msg.image_url && (
-    <>
-      <img
-        src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
-        alt="attachment"
+    {/* MESSAGE FORM */}
+    <form
+      onSubmit={handleSend}
+      style={{
+        display: "flex",
+        gap: 8,
+        marginTop: 12,
+        alignItems: "center",
+      }}
+    >
+      <textarea
+        ref={textareaRef}
+        placeholder="Type your message..."
+        value={newMsg}
+        onChange={(e) => setNewMsg(e.target.value)}
+        rows={1}
         style={{
-          maxWidth: 250,
-          marginTop: 8,
-          borderRadius: 8,
-          display: "block",
+          flex: 1,
+          padding: 13,
+          borderRadius: 19,
+          border: "1px solid #bfc8da",
+          fontSize: 15,
+          resize: "none",
+          overflowY: "auto",
+          maxHeight: 180,
         }}
+        disabled={!selectedClient}
       />
 
-      <a
-        href={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
-        download
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="submit"
         style={{
-          display: "inline-block",
-          marginTop: 6,
-          fontSize: 12,
-          fontWeight: 700,
-          color: "#4f46e5",
-          textDecoration: "none",
+          padding: "0 24px",
+          borderRadius: 19,
+          border: "none",
+          background: "#6366f1",
+          color: "#fff",
+          fontWeight: 900,
+          fontSize: 16,
+          cursor: "pointer",
         }}
       >
-        ⬇ Download
-      </a>
-    </>
-  )}
+        Send
+      </button>
+    </form>
+  </div>
+
+  {/* RIGHT: Details */}
+  <div
+    style={{
+      flex: "0 0 300px",
+      background: "#fff",
+      border: "1px solid #e2e8f0",
+      borderRadius: 12,
+      padding: 12,
+      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+      height: "fit-content",
+    }}
+  >
+    <div style={{ fontWeight: 900 }}>Client Details</div>
+
+    <div style={{ marginTop: 10 }}>
+      {selectedClient.phone}
+    </div>
+  </div>
 </div>
-
-                              <div
-                                className="message-timestamp"
-                                style={{
-                                  marginTop: 6,
-                                  fontSize: 11,
-                                  opacity: 0.85,
-                                  color: isSystem ? "#6d28d9" : undefined,
-                                }}
-                              >
-                                {footer}
-                              </div>
-                            </div>
-                          </React.Fragment>
-                        );
-                      });
-                    })()}
-
-                    {typing && <div style={{ color: "#aaa", fontSize: 13, marginLeft: 5 }}>You are typing...</div>}
-                    <div ref={messagesEndRef} />
-                  </div>
-
-           <form
-  onSubmit={handleSend}
-  style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "center" }}
->
-  {/* Text input */}
-<textarea
-  ref={textareaRef}
-  placeholder="Type your message..."
-  value={newMsg}
-  onChange={(e) => setNewMsg(e.target.value)}
-  rows={1}
-  style={{
-    flex: 1,
-    padding: 13,
-    borderRadius: 19,
-    border: "1px solid #bfc8da",
-    fontSize: 15,
-    outline: "none",
-    resize: "none",
-    overflowY: "auto",
-    maxHeight: 180,
-  transition: "height 0.12s cubic-bezier(.4,0,.2,1)",
-  }}
-  disabled={!selectedClient}
-/>
-
-  {/* Image upload button */}
-  <label
-    style={{
-      padding: "10px 14px",
-      borderRadius: 19,
-      background: "#e2e8f0",
-      cursor: "pointer",
-      fontWeight: 700,
-      fontSize: 14,
-    }}
-  >
-    📎
-    <input
-      type="file"
-      style={{ display: "none" }}
-      onChange={(e) => setSelectedFile(e.target.files[0])}
-      disabled={!selectedClient}
-    />
-  </label>
-
-  {/* Send button */}
-  <button
-    type="submit"
-    style={{
-      padding: "0 24px",
-      borderRadius: 19,
-      border: "none",
-      background: "#6366f1",
-      color: "#fff",
-      fontWeight: 900,
-      fontSize: 16,
-      cursor: "pointer",
-      opacity: !newMsg.trim() && !selectedFile ? 0.7 : 1,
-    }}
-    disabled={!newMsg.trim() && !selectedFile}
-  >
-    Send
-  </button>
-</form>
-
-                </div>
-
-                {/* RIGHT: details */}
-         <div
-  style={{
-    flex: "0 0 300px",
-    background: "#fff",
-    border: "1px solid #e2e8f0",
-    borderRadius: 12,
-    padding: 12,
-    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-    height: "fit-content",
-  }}
->
-                  <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
-
-                  <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
-                    {formatPhoneUS(selectedClient.phone) || "No phone"}
-                  </div>
 
                   <div style={{ marginTop: 10 }}>
                     <select
