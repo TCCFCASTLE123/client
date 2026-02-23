@@ -295,7 +295,7 @@ function ToastBanner({ toast, onClose, onJump }) {
       }}
     >
       <div style={{ width: 10, height: 10, borderRadius: 999, background: "#22c55e", flex: "0 0 auto" }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
+      < minWidth: 0 }}>
         <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.2 }}>New message</div>
         <div style={{ fontSize: 13, opacity: 0.92, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {toast.text}
@@ -1081,9 +1081,16 @@ const handleSelectClient = (client) => {
 
 </div>
               {/* 2-column */}
-              <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
+             <div
+  style={{
+    display: "flex",
+    gap: 14,
+    height: "calc(100% - 52px)",
+    minWidth: 0,
+  }}
+>
                 {/* LEFT: messages + input */}
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
