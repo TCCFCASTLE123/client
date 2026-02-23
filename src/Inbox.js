@@ -1089,22 +1089,20 @@ const handleSelectClient = (client) => {
     minWidth: 0,
   }}
 >
-                {/* LEFT: messages + input */}
-                <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
-                  <div
-                    className="messages"
-                    style={{
-                      background: "#f4f7fa",
-                      borderRadius: 12,
-                      padding: 18,
-                      flex: 2,
-minWidth: 0,
-display: "flex",
-flexDirection: "column",
-                      overflowY: "auto",
-                      boxShadow: "0 1px 4px #e0e7ef",
-                    }}
-                  >
+              <div
+  className="messages"
+  style={{
+    background: "#f4f7fa",
+    borderRadius: 12,
+    padding: 18,
+    flex: 1,
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+    overflowY: "auto",
+    boxShadow: "0 1px 4px #e0e7ef",
+  }}
+>
                     {loadingMessages && <div>Loading messages...</div>}
                     {!loadingMessages && (Array.isArray(messages) ? messages : []).length === 0 && (
                       <div className="no-messages" style={{ color: "#aaa" }}>
