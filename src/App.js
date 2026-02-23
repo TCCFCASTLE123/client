@@ -31,34 +31,62 @@ function NormalizePath() {
 }
 
 function Header({ onLogout }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <header className="app-header">
       <img
         src={process.env.PUBLIC_URL + "/castle-logo.png"}
         className="app-logo"
         alt="Castle Consulting Logo"
-        style={{ height: 100, marginBottom: 16 }}
+        style={{
+          height: isMobile ? 50 : 100,
+          marginBottom: isMobile ? 8 : 16,
+        }}
       />
-      <h1>Castle Consulting Messaging</h1>
-      <p>Welcome! You are logged in.</p>
 
-      <nav style={{ marginTop: 16 }}>
-        <Link to="/inbox" style={{ marginRight: 18, fontWeight: 700 }}>
+      <h1 style={{ fontSize: isMobile ? 22 : 48, margin: 0 }}>
+        Castle Consulting Messaging
+      </h1>
+
+      {!isMobile && <p>Welcome! You are logged in.</p>}
+
+      <nav
+        style={{
+          marginTop: isMobile ? 10 : 16,
+          display: "flex",
+          justifyContent: "center",
+          gap: isMobile ? 14 : 18,
+          flexWrap: "wrap",
+          fontSize: isMobile ? 14 : 16,
+        }}
+      >
+        <Link to="/inbox" style={{ fontWeight: 700 }}>
           Inbox
         </Link>
 
-        <Link to="/clients" style={{ marginRight: 18, fontWeight: 700 }}>
+        <Link to="/clients" style={{ fontWeight: 700 }}>
           Clients
         </Link>
 
-        <Link to="/admin/templates" style={{ fontWeight: 700, color: "#2774e6" }}>
+        <Link
+          to="/admin/templates"
+          style={{ fontWeight: 700, color: "#2774e6" }}
+        >
           Admin
         </Link>
       </nav>
 
       <button
         style={{
-          position: "absolute",
+          position: isMobile ? "static" : "absolute",
+          marginTop: isMobile ? 12 : 0,
           right: 24,
           top: 24,
           padding: "6px 18px",
