@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import Login from "./Login";
-import Inbox from "./Inbox";
+import Inbox from "./inbox/InboxContainer";
 import ClientsPage from "./ClientsPage";
 import AdminTemplates from "./AdminTemplates";
 import TemplateFormPage from "./TemplateFormPage";
