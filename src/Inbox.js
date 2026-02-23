@@ -409,54 +409,6 @@ const [showDetails, setShowDetails] = useState(false);
     setHighlightClientId(clientId);
     highlightTimerRef.current = setTimeout(() => setHighlightClientId(null), 1400);
   };
-
-  // Fetch messages when selecting client
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadConversation() {
-      if (!selectedClient) {
-        setMessages([]);
-        return;
-      }
-
-      setLoadingMessages(true);
-
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-          headers: { Authorization: "Bearer " + getToken() },
-        });
-
-        if (res.status === 401 || res.status === 403) {
-          if (!cancelled) {
-            setMessages([]);
-            setLoadingMessages(false);
-          }
-          redirectToLogin();
-          return;
-        }
-
-        const data = await res.json().catch(() => null);
-        const list = Array.isArray(data) ? data : Array.isArray(data?.messages) ? data.messages : [];
-
-        if (!cancelled) {
-          setMessages(list);
-          setLoadingMessages(false);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setMessages([]);
-          setLoadingMessages(false);
-          alert(err.message);
-        }
-      }
-    }
-
-    loadConversation();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedClient]);
 useEffect(() => {
   selectedClientIdRef.current = selectedClient?.id || null;
 }, [selectedClient]);
