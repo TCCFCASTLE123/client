@@ -1222,7 +1222,8 @@ const handleSelectClient = (client) => {
     </div>
   </div>
 </div>
-
+        </>
+      )}
                   
         </main>
 
