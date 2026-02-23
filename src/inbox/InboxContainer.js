@@ -227,11 +227,16 @@ const [loadingMessages, setLoadingMessages] = useState(false);
   /* =========================
      RENDER UI
      ========================= */
-  return (
-    <Inbox
-      clients={clients}
-      setClients={setClients}
-      statuses={statuses}
-    />
-  );
+return (
+  <Inbox
+    clients={clients}
+    setClients={setClients}
+    statuses={statuses}
+    selectedClient={selectedClient}
+    setSelectedClient={setSelectedClient}
+    messages={messages}
+    setMessages={setMessages}
+    loadingMessages={loadingMessages}
+  />
+);
 }
