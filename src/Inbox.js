@@ -344,9 +344,7 @@ function ToastBanner({ toast, onClose, onJump }) {
 /** =========================
  * Inbox Component
  * ========================= */
-function Inbox() {
-  const [clients, setClients] = useState([]);
-  const [statuses, setStatuses] = useState([]);
+function Inbox({ clients, setClients, statuses }) {
   const [selectedClient, setSelectedClient] = useState(null);
 const socketRef = useRef(null);
 const selectedClientIdRef = useRef(null);
