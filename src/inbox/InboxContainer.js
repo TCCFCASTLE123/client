@@ -66,7 +66,33 @@ export default function InboxContainer() {
           : [];
 
         if (!cancelled) {
-          setClients(fresh);
+          setClients((prev) => {
+            const prevById = new Map(
+              (Array.isArray(prev) ? prev : []).map((c) => [c.id, c])
+            );
+
+            const merged = fresh.map((c) => {
+              const old = prevById.get(c.id);
+              return {
+                ...c,
+                unreadCount: old?.unreadCount || 0,
+                lastMessageAt: old?.lastMessageAt || null,
+                lastMessageText: old?.lastMessageText || "",
+              };
+            });
+
+            merged.sort((a, b) => {
+              const ta = a.lastMessageAt
+                ? new Date(a.lastMessageAt).getTime()
+                : 0;
+              const tb = b.lastMessageAt
+                ? new Date(b.lastMessageAt).getTime()
+                : 0;
+              return tb - ta;
+            });
+
+            return merged;
+          });
         }
       } catch (err) {
         if (!cancelled) console.error(err);
