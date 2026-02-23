@@ -1141,20 +1141,21 @@ flexDirection: "column",
                           <React.Fragment key={i}>
                             {showDate && <div className="date-divider">{format(msgDate, "EEEE, MMM d, yyyy")}</div>}
 
-                            <div
-                              className={`message ${bubbleClass}`}
-                              style={{
-                                background: isSystem ? "#f1f5f9" : undefined,
-                                border: isSystem ? "1px solid #e2e8f0" : undefined,
-                                color: isSystem ? "#6d28d9" : undefined,
-                                padding: isSystem ? "10px 14px" : "7px 16px",
-                                borderRadius: isSystem ? 16 : 10,
-                                margin: "8px 0",
-                                maxWidth: isSystem ? "85%" : undefined,
-                                alignSelf: isSystem ? "flex-start" : undefined,
-                                boxShadow: isSystem ? "0 1px 3px rgba(0,0,0,0.06)" : undefined,
-                              }}
-                            >
+                        <div
+  className={`message ${bubbleClass}`}
+  style={{
+    background: isSystem ? "#f1f5f9" : undefined,
+    border: isSystem ? "1px solid #e2e8f0" : undefined,
+    color: isSystem ? "#6d28d9" : undefined,
+    padding: isSystem ? "10px 14px" : "7px 16px",
+    borderRadius: isSystem ? 16 : 10,
+    margin: "8px 0",
+    maxWidth: "70%",
+    width: "fit-content",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
+  }}
+>
                          <div className="message-text" style={{ whiteSpace: "pre-wrap" }}>
   {msg.text}
 
