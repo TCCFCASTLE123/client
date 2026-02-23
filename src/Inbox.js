@@ -295,7 +295,7 @@ function ToastBanner({ toast, onClose, onJump }) {
       }}
     >
       <div style={{ width: 10, height: 10, borderRadius: 999, background: "#22c55e", flex: "0 0 auto" }} />
-      < minWidth: 0 }}>
+<div style={{ minWidth: 0 }}>
         <div style={{ fontWeight: 800, fontSize: 13, letterSpacing: 0.2 }}>New message</div>
         <div style={{ fontSize: 13, opacity: 0.92, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {toast.text}
