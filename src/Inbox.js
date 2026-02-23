@@ -873,30 +873,28 @@ const handleSelectClient = (client) => {
     <>
       <ToastBanner toast={toast} onClose={() => setToast((t) => ({ ...t, show: false }))} onJump={jumpToClient} />
 
-      <div
-        className="inbox-container"
-        style={{
-          display: "flex",
-          minHeight: 600,
-          height: "calc(100vh - 190px)",
-         width: "100%", // use almost full width
-          maxWidth: 1600, // still prevents ultra-wide weirdness
-          margin: "0",
-          overflow: "hidden",
-        }}
-      >
+<div
+  className="inbox-container"
+  style={{
+    display: "flex",
+    height: "calc(100vh - 140px)",
+    width: "100%",
+    overflow: "hidden",
+  }}
+>
         {/* LEFT: Client list */}
-        <aside
-          className="inbox-sidebar"
-          style={{
-            width: isMobile ? "100%" : 340,
-display: isMobile && mobileView !== "clients" ? "none" : "block",
-            background: "#f8fafc",
-            padding: 18,
-            height: "100%",
-            overflowY: "auto",
-          }}
-        >
+<aside
+  className="inbox-sidebar"
+  style={{
+    flex: isMobile ? "1" : "0 0 22%",
+    maxWidth: isMobile ? "100%" : 360,
+    display: isMobile && mobileView !== "clients" ? "none" : "block",
+    background: "#f8fafc",
+    padding: 18,
+    height: "100%",
+    overflowY: "auto",
+  }}
+>
           <h3 style={{ marginTop: 0 }}>Clients</h3>
 
           <button
@@ -1008,10 +1006,11 @@ display: isMobile && mobileView !== "clients" ? "none" : "block",
         </aside>
 
         {/* RIGHT: Conversation + Details */}
-        <main
+<main
   className="inbox-main"
   style={{
     flex: 1,
+    minWidth: 0,
     padding: isMobile ? 16 : 32,
     minHeight: 600,
     height: "100%",
@@ -1085,14 +1084,17 @@ display: isMobile && mobileView !== "clients" ? "none" : "block",
               {/* 2-column */}
               <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
                 {/* LEFT: messages + input */}
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
                       background: "#f4f7fa",
                       borderRadius: 12,
                       padding: 18,
-                      flex: 1,
+                      flex: 2,
+minWidth: 0,
+display: "flex",
+flexDirection: "column",
                       overflowY: "auto",
                       boxShadow: "0 1px 4px #e0e7ef",
                     }}
@@ -1275,8 +1277,9 @@ display: isMobile && mobileView !== "clients" ? "none" : "block",
                 {/* RIGHT: details */}
                 <div
                   style={{
-                    width: 260,
-                    flex: "0 0 260px",
+                 flex: "0 0 20%",
+maxWidth: 320,
+minWidth: 220,
                     background: "#fff",
                     border: "1px solid #e2e8f0",
                     borderRadius: 12,
