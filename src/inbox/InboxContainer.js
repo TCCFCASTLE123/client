@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { io } from "socket.io-client";
 import Inbox from "../Inbox";
 
 function getToken() {
@@ -13,7 +14,11 @@ function redirectToLogin() {
 export default function InboxContainer() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
+  const socketRef = useRef(null);
 
+  /* =========================
+     FETCH STATUSES + CLIENTS
+     ========================= */
   useEffect(() => {
     let cancelled = false;
 
@@ -110,6 +115,69 @@ export default function InboxContainer() {
     };
   }, []);
 
+  /* =========================
+     SOCKET CONNECTION
+     ========================= */
+  useEffect(() => {
+    if (socketRef.current) return;
+
+    const socket = io(process.env.REACT_APP_API_URL, {
+      path: "/socket.io",
+      transports: ["polling", "websocket"],
+      auth: { token: getToken() },
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+    });
+
+    socketRef.current = socket;
+
+    const handleMessage = (msg) => {
+      if (!msg || !msg.client_id) return;
+
+      setClients((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((c) => c.id === msg.client_id);
+        if (idx === -1) return prev;
+
+        const old = next[idx];
+
+        const updated = {
+          ...old,
+          lastMessageAt: msg.timestamp || new Date().toISOString(),
+          lastMessageText: msg.text || "",
+          unreadCount:
+            msg.direction === "inbound"
+              ? (old.unreadCount || 0) + 1
+              : old.unreadCount || 0,
+        };
+
+        next.splice(idx, 1);
+        next.unshift(updated);
+        return next;
+      });
+    };
+
+    socket.on("newMessage", handleMessage);
+    socket.on("message", handleMessage);
+    socket.on("message:new", handleMessage);
+
+    socket.on("connect_error", (err) => {
+      console.warn("Socket connect error:", err.message);
+    });
+
+    return () => {
+      socket.off("newMessage", handleMessage);
+      socket.off("message", handleMessage);
+      socket.off("message:new", handleMessage);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, []);
+
+  /* =========================
+     RENDER UI
+     ========================= */
   return (
     <Inbox
       clients={clients}
