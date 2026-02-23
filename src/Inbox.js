@@ -23,9 +23,6 @@ function formatPhoneUS(input) {
 /** =========================
  * STATUS COLORS (border + pill)
  * ========================= */
-/** =========================
- * STATUS COLORS (border + pill)
- * ========================= */
 function statusThemeByName(name) {
   const MAP = {
     "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
