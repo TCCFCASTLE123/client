@@ -886,8 +886,7 @@ const handleSelectClient = (client) => {
 <aside
   className="inbox-sidebar"
   style={{
-    flex: isMobile ? "1" : "0 0 22%",
-    maxWidth: isMobile ? "100%" : 360,
+    flex: "0 0 340px",
     display: isMobile && mobileView !== "clients" ? "none" : "block",
     background: "#f8fafc",
     padding: 18,
@@ -1084,7 +1083,7 @@ const handleSelectClient = (client) => {
               {/* 2-column */}
               <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
                 {/* LEFT: messages + input */}
-                <div style={{ flex: 2, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
@@ -1275,19 +1274,17 @@ flexDirection: "column",
                 </div>
 
                 {/* RIGHT: details */}
-                <div
-                  style={{
-                 flex: "0 0 20%",
-maxWidth: 320,
-minWidth: 220,
-                    background: "#fff",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 12,
-                    padding: 12,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    height: "fit-content",
-                  }}
-                >
+         <div
+  style={{
+    flex: "0 0 300px",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    borderRadius: 12,
+    padding: 12,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+    height: "fit-content",
+  }}
+>
                   <div style={{ fontWeight: 900, fontSize: 13, color: "#0f172a" }}>Client Details</div>
 
                   <div style={{ marginTop: 10, fontWeight: 800, fontSize: 13 }}>
