@@ -359,7 +359,7 @@ const [mobileView, setMobileView] = useState("clients");
   const textareaRef = useRef(null);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
-
+const [showDetails, setShowDetails] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
   const [editClientData, setEditClientData] = useState(null);
   const [search, setSearch] = useState("");
@@ -1078,7 +1078,19 @@ const handleSelectClient = (client) => {
   >
     Delete
   </button>
-
+<button
+  onClick={() => setShowDetails(true)}
+  style={{
+    background: "#e2e8f0",
+    border: "none",
+    borderRadius: 10,
+    padding: "8px 14px",
+    fontWeight: 900,
+    cursor: "pointer",
+  }}
+>
+  ⋯
+</button>
 </div>
     {/* 2-column */}
 <div
@@ -1203,24 +1215,6 @@ const handleSelectClient = (client) => {
     </form>
   </div>
 
-  {/* RIGHT: Details */}
-  <div
-    style={{
-      flex: "0 0 300px",
-      background: "#fff",
-      border: "1px solid #e2e8f0",
-      borderRadius: 12,
-      padding: 12,
-      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-      height: "fit-content",
-    }}
-  >
-    <div style={{ fontWeight: 900 }}>Client Details</div>
-
-    <div style={{ marginTop: 10 }}>
-      {selectedClient.phone}
-    </div>
-  </div>
 </div>
         </>
       )}
@@ -1230,6 +1224,65 @@ const handleSelectClient = (client) => {
         {showClientForm && (
           <ClientForm initialData={editClientData || {}} onClose={() => setShowClientForm(false)} onSave={handleClientSave} />
         )}
+          {showDetails && selectedClient && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      right: 0,
+      height: "100vh",
+      width: isMobile ? "100%" : "360px",
+      background: "#fff",
+      boxShadow: "-10px 0 30px rgba(0,0,0,0.15)",
+      padding: 20,
+      zIndex: 9999,
+      overflowY: "auto",
+      transition: "transform 0.3s ease",
+    }}
+  >
+    <button
+      onClick={() => setShowDetails(false)}
+      style={{
+        background: "transparent",
+        border: "none",
+        fontSize: 20,
+        cursor: "pointer",
+        marginBottom: 10,
+      }}
+    >
+      ✕
+    </button>
+
+    <h3 style={{ marginTop: 0 }}>Client Details</h3>
+
+    <div style={{ marginBottom: 8 }}>
+      <b>Phone:</b> {selectedClient.phone}
+    </div>
+
+    {selectedClient.email && (
+      <div><b>Email:</b> {selectedClient.email}</div>
+    )}
+
+    {selectedClient.office && (
+      <div><b>Office:</b> {selectedClient.office}</div>
+    )}
+
+    {selectedClient.case_type && (
+      <div><b>Case:</b> {selectedClient.case_type}</div>
+    )}
+
+    {selectedClient.case_subtype && (
+      <div><b>Subcase:</b> {selectedClient.case_subtype}</div>
+    )}
+
+    {selectedClient.notes && (
+      <div style={{ marginTop: 10 }}>
+        <b>Notes:</b><br />
+        {selectedClient.notes}
+      </div>
+    )}
+  </div>
+)}
       </div>
     </>
   );
