@@ -344,17 +344,23 @@ function ToastBanner({ toast, onClose, onJump }) {
 /** =========================
  * Inbox Component
  * ========================= */
-function Inbox({ clients, setClients, statuses }) {
-  const [selectedClient, setSelectedClient] = useState(null);
+function Inbox({
+  clients,
+  setClients,
+  statuses,
+  selectedClient,
+  setSelectedClient,
+  messages,
+  setMessages,
+  loadingMessages,
+}) {
 const selectedClientIdRef = useRef(null);
 // MOBILE SUPPORT
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const [mobileView, setMobileView] = useState("clients"); 
 // clients | chat
-  const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const textareaRef = useRef(null);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [typing, setTyping] = useState(false);
 const [showDetails, setShowDetails] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
