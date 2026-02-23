@@ -350,7 +350,10 @@ function Inbox() {
   const [selectedClient, setSelectedClient] = useState(null);
 const socketRef = useRef(null);
 const selectedClientIdRef = useRef(null);
-
+// MOBILE SUPPORT
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+const [mobileView, setMobileView] = useState("clients"); 
+// clients | chat
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const textareaRef = useRef(null);
@@ -644,6 +647,12 @@ useEffect(() => {
   }
 }, [selectedClient]);
   
+  useEffect(() => {
+  const handleResize = () => setIsMobile(window.innerWidth < 768);
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+  
  const handleSend = async (e) => {
   e.preventDefault();
 
@@ -827,10 +836,19 @@ useEffect(() => {
     });
   }, [clients, search, statuses, HIDE_FROM_INBOX_STATUSES]);
 
-  const handleSelectClient = (client) => {
-    setSelectedClient(client);
-    setClients((prev) => (Array.isArray(prev) ? prev : []).map((c) => (c.id === client.id ? { ...c, unreadCount: 0 } : c)));
-  };
+const handleSelectClient = (client) => {
+  setSelectedClient(client);
+
+  setClients((prev) =>
+    (Array.isArray(prev) ? prev : []).map((c) =>
+      c.id === client.id ? { ...c, unreadCount: 0 } : c
+    )
+  );
+
+  if (isMobile) {
+    setMobileView("chat");
+  }
+};
 
   // Deep link selection
   useEffect(() => {
@@ -861,9 +879,9 @@ useEffect(() => {
           display: "flex",
           minHeight: 600,
           height: "calc(100vh - 190px)",
-          width: "calc(100vw - 40px)", // use almost full width
+         width: "100%", // use almost full width
           maxWidth: 1600, // still prevents ultra-wide weirdness
-          margin: "20px auto",
+          margin: "0",
           overflow: "hidden",
         }}
       >
@@ -871,7 +889,8 @@ useEffect(() => {
         <aside
           className="inbox-sidebar"
           style={{
-            width: 340,
+            width: isMobile ? "100%" : 340,
+display: isMobile && mobileView !== "clients" ? "none" : "block",
             background: "#f8fafc",
             padding: 18,
             height: "100%",
@@ -990,15 +1009,16 @@ useEffect(() => {
 
         {/* RIGHT: Conversation + Details */}
         <main
-          className="inbox-main"
-          style={{
-            flex: 1,
-            padding: 32,
-            minHeight: 600,
-            height: "100%",
-            overflow: "hidden",
-          }}
-        >
+  className="inbox-main"
+  style={{
+    flex: 1,
+    padding: isMobile ? 16 : 32,
+    minHeight: 600,
+    height: "100%",
+    overflow: "hidden",
+    display: isMobile && mobileView !== "chat" ? "none" : "block",
+  }}
+>
           {!selectedClient && (
             <div style={{ color: "#64748b", margin: "auto", textAlign: "center", fontSize: 16, fontWeight: 600 }}>
               Select a client to view messages
@@ -1008,45 +1028,64 @@ useEffect(() => {
           {selectedClient && (
             <>
               {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-                <h2 style={{ margin: 0, fontWeight: 900 }}>Conversation with {selectedClient.name}</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
 
-                <button
-                  onClick={openEditClientForm}
-                  style={{
-                    marginLeft: "auto",
-                    background: "#818cf8",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 10,
-                    padding: "8px 16px",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                  }}
-                >
-                  Edit
-                </button>
+  {isMobile && (
+    <button
+      onClick={() => setMobileView("clients")}
+      style={{
+        padding: "6px 12px",
+        borderRadius: 8,
+        border: "none",
+        background: "#e2e8f0",
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      ← Back
+    </button>
+  )}
 
-                <button
-                  onClick={handleDeleteClient}
-                  style={{
-                    background: "#f43f5e",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 10,
-                    padding: "8px 16px",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
+  <h2 style={{ margin: 0, fontWeight: 900 }}>
+    Conversation with {selectedClient.name}
+  </h2>
 
+  <button
+    onClick={openEditClientForm}
+    style={{
+      marginLeft: "auto",
+      background: "#818cf8",
+      color: "#fff",
+      border: "none",
+      borderRadius: 10,
+      padding: "8px 16px",
+      fontWeight: 900,
+      cursor: "pointer",
+    }}
+  >
+    Edit
+  </button>
+
+  <button
+    onClick={handleDeleteClient}
+    style={{
+      background: "#f43f5e",
+      color: "#fff",
+      border: "none",
+      borderRadius: 10,
+      padding: "8px 16px",
+      fontWeight: 900,
+      cursor: "pointer",
+    }}
+  >
+    Delete
+  </button>
+
+</div>
               {/* 2-column */}
               <div style={{ display: "flex", gap: 14, height: "calc(100% - 52px)" }}>
                 {/* LEFT: messages + input */}
-                <div style={{ flex: 1, minWidth: 650, display: "flex", flexDirection: "column" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
                   <div
                     className="messages"
                     style={{
