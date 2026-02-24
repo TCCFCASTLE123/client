@@ -1,6 +1,7 @@
 // Inbox.js
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ClientSidebar from "./inbox/ClientSidebar";
+import DetailsDrawer from "./inbox/DetailsDrawer";
 import ConversationPanel from "./inbox/ConversationPanel";
 import { format } from "date-fns";
 import { io } from "socket.io-client";
@@ -730,7 +731,12 @@ const handleSelectClient = (client) => {
         {showClientForm && (
           <ClientForm initialData={editClientData || {}} onClose={() => setShowClientForm(false)} onSave={handleClientSave} />
         )}
-          
+          <DetailsDrawer
+  selectedClient={selectedClient}
+  isMobile={isMobile}
+  showDetails={showDetails}
+  onClose={() => setShowDetails(false)}
+/>
       </div>
     </>
   );
