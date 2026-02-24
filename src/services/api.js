@@ -24,10 +24,10 @@ function authHeaders(isJson = true) {
 
 async function handleResponse(res) {
   if (res.status === 401 || res.status === 403) {
-  localStorage.removeItem("token");
-  window.location.href = "/login";
-  throw new Error("Unauthorized");
-}
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
 
   const data = await res.json().catch(() => null);
 
@@ -39,10 +39,10 @@ async function handleResponse(res) {
 }
 
 /* =========================
-   API METHODS
+   API OBJECT
 ========================= */
 
-export const api = {
+const api = {
 
   // ---- CLIENTS ----
 
@@ -114,9 +114,7 @@ export const api = {
 
     return handleResponse(res);
   },
-};
-const api = {
-  ...all your methods
+
 };
 
 export default api;
