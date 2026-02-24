@@ -24,10 +24,10 @@ function authHeaders(isJson = true) {
 
 async function handleResponse(res) {
   if (res.status === 401 || res.status === 403) {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-    return;
-  }
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+  throw new Error("Unauthorized");
+}
 
   const data = await res.json().catch(() => null);
 
