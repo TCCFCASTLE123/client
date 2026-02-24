@@ -847,10 +847,10 @@ const handleSelectClient = (client) => {
             overflowWrap: "anywhere",
           }}
         >
-       {msg.media_url ? (
+{msg.image_url ? (
   <div style={{ marginTop: 4 }}>
     <img
-      src={msg.media_url}
+      src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
       alt="attachment"
       style={{
         maxWidth: 260,
