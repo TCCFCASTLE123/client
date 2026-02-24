@@ -1,6 +1,7 @@
 // Inbox.js
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ClientSidebar from "./inbox/ClientSidebar";
+import ConversationPanel from "./inbox/ConversationPanel";
 import { format } from "date-fns";
 import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
@@ -712,221 +713,17 @@ const handleSelectClient = (client) => {
     display: isMobile && mobileView !== "chat" ? "none" : "block",
   }}
 >
-          {!selectedClient && (
-            <div style={{ color: "#64748b", margin: "auto", textAlign: "center", fontSize: 16, fontWeight: 600 }}>
-              Select a client to view messages
-            </div>
-          )}
 
-          {selectedClient && (
-            <>
-              {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
-
-  {isMobile && (
-    <button
-      onClick={() => setMobileView("clients")}
-      style={{
-        padding: "6px 12px",
-        borderRadius: 8,
-        border: "none",
-        background: "#e2e8f0",
-        fontWeight: 700,
-        cursor: "pointer",
-      }}
-    >
-      ← Back
-    </button>
-  )}
-
-  <h2 style={{ margin: 0, fontWeight: 900 }}>
-    Conversation with {selectedClient.name}
-  </h2>
-
-  <button
-    onClick={openEditClientForm}
-    style={{
-      marginLeft: "auto",
-      background: "#818cf8",
-      color: "#fff",
-      border: "none",
-      borderRadius: 10,
-      padding: "8px 16px",
-      fontWeight: 900,
-      cursor: "pointer",
-    }}
-  >
-    Edit
-  </button>
-
-  <button
-    onClick={handleDeleteClient}
-    style={{
-      background: "#f43f5e",
-      color: "#fff",
-      border: "none",
-      borderRadius: 10,
-      padding: "8px 16px",
-      fontWeight: 900,
-      cursor: "pointer",
-    }}
-  >
-    Delete
-  </button>
-<button
-  onClick={() => setShowDetails(true)}
-  style={{
-    background: "#e2e8f0",
-    border: "none",
-    borderRadius: 10,
-    padding: "8px 14px",
-    fontWeight: 900,
-    cursor: "pointer",
-  }}
->
-  ⋯
-</button>
-</div>
-    {/* 2-column */}
-<div
-  style={{
-    display: "flex",
-    gap: 14,
-    height: "calc(100% - 52px)",
-    minWidth: 0,
-  }}
->
-  {/* LEFT: Messages */}
-  <div
-    className="messages"
-    style={{
-      background: "#f4f7fa",
-      borderRadius: 12,
-      padding: 18,
-      flex: 1,
-      minWidth: 0,
-      display: "flex",
-      flexDirection: "column",
-      overflowY: "auto",
-      boxShadow: "0 1px 4px #e0e7ef",
-    }}
-  >
-    {loadingMessages && <div>Loading messages...</div>}
-
-    {!loadingMessages &&
-      (Array.isArray(messages) ? messages : []).length === 0 && (
-        <div style={{ color: "#aaa" }}>No messages yet!</div>
-      )}
-
-    {(Array.isArray(messages) ? messages : []).map((msg, i) => {
-      const msgDate = safeDate(msg.timestamp);
-      const isSystem = msg.sender === "system";
-      const isOutbound =
-        msg.direction === "outbound" || msg.sender === "me";
-
-      const bubbleClass = isSystem
-        ? "system"
-        : isOutbound
-        ? "me"
-        : "client";
-
-      return (
-        <div
-          key={i}
-          className={`message ${bubbleClass}`}
-          style={{
-            background: isSystem ? "#f1f5f9" : undefined,
-            border: isSystem ? "1px solid #e2e8f0" : undefined,
-            color: isSystem ? "#6d28d9" : undefined,
-            padding: "8px 14px",
-            borderRadius: 14,
-            margin: "8px 0",
-            maxWidth: "70%",
-            width: "fit-content",
-            wordBreak: "break-word",
-            overflowWrap: "anywhere",
-          }}
-        >
-{msg.image_url ? (
-  <div style={{ marginTop: 4 }}>
-    <img
-      src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
-      alt="attachment"
-      style={{
-        maxWidth: 260,
-        borderRadius: 12,
-        display: "block",
-      }}
-    />
-  </div>
-) : (
-  <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
-)}
-          <div
-            style={{
-              marginTop: 6,
-              fontSize: 11,
-              opacity: 0.7,
-            }}
-          >
-            {format(msgDate, "h:mm a")}
-          </div>
-        </div>
-      );
-    })}
-
-    <div ref={messagesEndRef} />
-
-    {/* MESSAGE FORM */}
-    <form
-      onSubmit={handleSend}
-      style={{
-        display: "flex",
-        gap: 8,
-        marginTop: 12,
-        alignItems: "center",
-      }}
-    >
-      <textarea
-        ref={textareaRef}
-        placeholder="Type your message..."
-        value={newMsg}
-        onChange={(e) => setNewMsg(e.target.value)}
-        rows={1}
-        style={{
-          flex: 1,
-          padding: 13,
-          borderRadius: 19,
-          border: "1px solid #bfc8da",
-          fontSize: 15,
-          resize: "none",
-          overflowY: "auto",
-          maxHeight: 180,
-        }}
-        disabled={!selectedClient}
-      />
-
-      <button
-        type="submit"
-        style={{
-          padding: "0 24px",
-          borderRadius: 19,
-          border: "none",
-          background: "#6366f1",
-          color: "#fff",
-          fontWeight: 900,
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-      >
-        Send
-      </button>
-    </form>
-  </div>
-
-</div>
-        </>
-      )}
+     <ConversationPanel
+  selectedClient={selectedClient}
+  messages={messages}
+  loadingMessages={loadingMessages}
+  handleSend={handleSend}
+  newMsg={newMsg}
+  setNewMsg={setNewMsg}
+  textareaRef={textareaRef}
+  messagesEndRef={messagesEndRef}
+/>
                   
         </main>
 
