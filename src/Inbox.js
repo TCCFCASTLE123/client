@@ -5,6 +5,7 @@ import DetailsDrawer from "./inbox/DetailsDrawer";
 import ConversationHeader from "./inbox/ConversationHeader";
 import ConversationPanel from "./inbox/ConversationPanel";
 import { useLocation } from "react-router-dom";
+import { api } from "../services/api";
 
 function canonicalPhone(input) {
   if (!input) return "";
@@ -458,80 +459,29 @@ useEffect(() => {
   return () => window.removeEventListener("resize", handleResize);
 }, []);
   
- const handleSend = async (e) => {
+const handleSend = async (e) => {
   e.preventDefault();
 
   if (!selectedClient) return alert("No client selected.");
 
   try {
-    // =========================
-    // 1️⃣ Upload image first (if selected)
-    // =========================
+    // Upload image first
     if (selectedFile) {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("client_id", selectedClient.id);
-
-      const uploadRes = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/messages/upload-image`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + getToken(),
-          },
-          body: formData,
-        }
-      );
-
-      if (uploadRes.status === 401 || uploadRes.status === 403) {
-        redirectToLogin();
-        return;
-      }
-
-      if (!uploadRes.ok) {
-        throw new Error(await uploadRes.text());
-      }
-
+      await api.uploadImage(selectedClient.id, selectedFile);
       setSelectedFile(null);
     }
 
-    // =========================
-    // 2️⃣ Send text message (if exists)
-    // =========================
+    // Send text message
     if (newMsg.trim()) {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/messages/send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer " + getToken(),
-          },
-          body: JSON.stringify({
-            client_id: selectedClient.id,
-            text: newMsg,
-          }),
-        }
-      );
-
-      if (response.status === 401 || response.status === 403) {
-        redirectToLogin();
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
+      await api.sendMessage(selectedClient.id, newMsg.trim());
       setNewMsg("");
     }
 
   } catch (err) {
     console.error("Send failed:", err);
-    alert("Failed to send message.");
+    alert(err.message || "Failed to send message.");
   }
 };
-
 
   const openAddClientForm = () => {
     setEditClientData(null);
@@ -554,64 +504,47 @@ useEffect(() => {
     setShowClientForm(false);
   };
 
-  const handleDeleteClient = async () => {
-    if (!selectedClient) return;
+const handleDeleteClient = async () => {
+  if (!selectedClient) return;
 
-    if (window.confirm(`Delete client "${selectedClient.name}" and all messages?`)) {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/clients/${selectedClient.id}`, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + getToken() },
-        });
+  if (!window.confirm(`Delete client "${selectedClient.name}" and all messages?`)) {
+    return;
+  }
 
-        if (res.status === 401 || res.status === 403) {
-          redirectToLogin();
-          return;
-        }
+  try {
+    await api.deleteClient(selectedClient.id);
 
-        if (!res.ok) throw new Error("Failed to delete client");
+    setClients((prev) =>
+      (Array.isArray(prev) ? prev : []).filter(
+        (c) => c.id !== selectedClient.id
+      )
+    );
 
-        setClients((prev) => (Array.isArray(prev) ? prev : []).filter((c) => c.id !== selectedClient.id));
-        setSelectedClient(null);
-        setMessages([]);
-      } catch (err) {
-        alert(err.message || "Failed to delete client");
-      }
+    setSelectedClient(null);
+    setMessages([]);
+  } catch (err) {
+    alert(err.message || "Failed to delete client");
+  }
+};
+
+const handleStatusChange = async (clientId, statusId) => {
+  try {
+    await api.updateClientStatus(clientId, statusId);
+
+    setClients((prev) =>
+      (Array.isArray(prev) ? prev : []).map((c) =>
+        c.id === clientId ? { ...c, status_id: statusId } : c
+      )
+    );
+
+    if (selectedClient && selectedClient.id === clientId) {
+      setSelectedClient({ ...selectedClient, status_id: statusId });
     }
-  };
 
-  const handleStatusChange = (clientId, statusId) => {
-    fetch(`${process.env.REACT_APP_API_URL}/api/clients/${clientId}/status`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + getToken(),
-      },
-      body: JSON.stringify({ status_id: statusId }),
-    })
-      .then(async (res) => {
-        if (res.status === 401 || res.status === 403) {
-          redirectToLogin();
-          return { success: false };
-        }
-        const data = await res.json().catch(() => ({ success: false }));
-        return data;
-      })
-      .then((data) => {
-        if (data && data.success) {
-          setClients((prev) =>
-            (Array.isArray(prev) ? prev : []).map((c) => (c.id === clientId ? { ...c, status_id: statusId } : c))
-          );
-
-          if (selectedClient && selectedClient.id === clientId) {
-            setSelectedClient({ ...selectedClient, status_id: statusId });
-          }
-        } else {
-          alert("Failed to update status.");
-        }
-      })
-      .catch((err) => alert(err.message));
-  };
+  } catch (err) {
+    alert(err.message || "Failed to update status.");
+  }
+}; 
 
   const getStatusName = (statusId) => {
     const list = Array.isArray(statuses) ? statuses : [];
