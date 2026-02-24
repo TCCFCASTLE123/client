@@ -2,9 +2,8 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import ClientSidebar from "./inbox/ClientSidebar";
 import DetailsDrawer from "./inbox/DetailsDrawer";
+import ConversationHeader from "./inbox/ConversationHeader";
 import ConversationPanel from "./inbox/ConversationPanel";
-import { format } from "date-fns";
-import { io } from "socket.io-client";
 import { useLocation } from "react-router-dom";
 
 function canonicalPhone(input) {
@@ -714,7 +713,14 @@ const handleSelectClient = (client) => {
     display: isMobile && mobileView !== "chat" ? "none" : "block",
   }}
 >
-
+<ConversationHeader
+  selectedClient={selectedClient}
+  isMobile={isMobile}
+  onBack={() => setMobileView("clients")}
+  onEdit={openEditClientForm}
+  onDelete={handleDeleteClient}
+  onShowDetails={() => setShowDetails(true)}
+/>
      <ConversationPanel
   selectedClient={selectedClient}
   messages={messages}
