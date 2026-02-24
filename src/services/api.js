@@ -115,3 +115,8 @@ export const api = {
     return handleResponse(res);
   },
 };
+const api = {
+  ...all your methods
+};
+
+export default api;
