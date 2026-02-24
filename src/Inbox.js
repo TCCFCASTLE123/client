@@ -847,7 +847,21 @@ const handleSelectClient = (client) => {
             overflowWrap: "anywhere",
           }}
         >
-          <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+       {msg.media_url ? (
+  <div style={{ marginTop: 4 }}>
+    <img
+      src={msg.media_url}
+      alt="attachment"
+      style={{
+        maxWidth: 260,
+        borderRadius: 12,
+        display: "block",
+      }}
+    />
+  </div>
+) : (
+  <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
+)}
           <div
             style={{
               marginTop: 6,
