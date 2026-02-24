@@ -5,7 +5,7 @@ import DetailsDrawer from "./inbox/DetailsDrawer";
 import ConversationHeader from "./inbox/ConversationHeader";
 import ConversationPanel from "./inbox/ConversationPanel";
 import { useLocation } from "react-router-dom";
-import { api } from "../services/api";
+import api from "./services/api";
 
 function canonicalPhone(input) {
   if (!input) return "";
