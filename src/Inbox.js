@@ -10,7 +10,7 @@ import { canonicalPhone, formatPhoneUS } from "./utils/phone";
 import { statusThemeByName } from "./utils/statusTheme";
 import ClientForm from "./inbox/ClientForm";
 import ToastBanner from "./components/ToastBanner";
-
+import { getStatusName } from "./utils/status";
 /** =========================
  * Inbox Component
  * ========================= */
@@ -170,13 +170,6 @@ const handleDeleteClient = async () => {
   }
 };
 
-
-  const getStatusName = (statusId) => {
-    const list = Array.isArray(statuses) ? statuses : [];
-    const found = list.find((s) => String(s.id) === String(statusId));
-    return found ? found.name : "";
-  };
-
   // This is the actual list used for the LEFT sidebar
   // - hides those statuses
   // - applies search
@@ -186,7 +179,9 @@ const handleDeleteClient = async () => {
     const qDigits = q.replace(/\D/g, "");
 
     return list.filter((c) => {
-      const statusName = c.status_id ? getStatusName(c.status_id) : "";
+      const statusName = c.status_id
+  ? getStatusName(c.status_id, statuses)
+  : "";
       if (statusName && HIDE_FROM_INBOX_STATUSES.has(statusName)) return false;
 
       if (!q) return true;
