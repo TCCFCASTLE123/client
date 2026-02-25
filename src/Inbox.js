@@ -30,54 +30,51 @@ const [attorneyAssigned, setAttorneyAssigned] = useState(initialData.attorney_as
   const [saving, setSaving] = useState(false);
   const [errMsg, setErrMsg] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrMsg("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setErrMsg("");
 
-    const cleanName = (name || "").trim();
-    const cleanPhone = canonicalPhone(phone);
+  const cleanName = (name || "").trim();
+  const cleanPhone = canonicalPhone(phone);
 
-    if (!cleanName) return setErrMsg("Name is required.");
-    if (!cleanPhone || cleanPhone.length < 10) return setErrMsg("Phone number is required (10 digits).");
-    if (!office) return setErrMsg("Office is required.");
-    if (!caseType) return setErrMsg("Case Type is required.");
+  if (!cleanName) return setErrMsg("Name is required.");
+  if (!cleanPhone || cleanPhone.length < 10)
+    return setErrMsg("Phone number is required (10 digits).");
+  if (!office) return setErrMsg("Office is required.");
+  if (!caseType) return setErrMsg("Case Type is required.");
 
-    const method = initialData.id ? "PATCH" : "POST";
-    const url = initialData.id
-      ? `${process.env.REACT_APP_API_URL}/api/clients/${initialData.id}`
-      : `${process.env.REACT_APP_API_URL}/api/clients`;
+  const payload = {
+    name: cleanName,
+    phone: cleanPhone,
+  };
 
-    const payload = {};
-    payload.name = cleanName;
-    payload.phone = cleanPhone;
-    if (email && email.trim()) payload.email = email.trim();
-    if (notes && notes.trim()) payload.notes = notes.trim();
-    if (language && language.trim()) payload.language = language.trim();
-    if (office && office.trim()) payload.office = office.trim();
-    if (caseType && caseType.trim()) payload.case_type = caseType.trim();
-    if (caseSubtype && caseSubtype.trim()) payload.case_subtype = caseSubtype.trim();
-    if (apptDate && apptDate.trim()) payload.appt_date = apptDate.trim();
-    if (apptTime && apptTime.trim()) payload.appt_time = apptTime.trim();
-    if (apptSetter && apptSetter.trim()) payload.appt_setter = apptSetter.trim();
-    if (ic && ic.trim()) payload.ic = ic.trim();
-if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = attorneyAssigned.trim();
+  if (email?.trim()) payload.email = email.trim();
+  if (notes?.trim()) payload.notes = notes.trim();
+  if (language?.trim()) payload.language = language.trim();
+  if (office?.trim()) payload.office = office.trim();
+  if (caseType?.trim()) payload.case_type = caseType.trim();
+  if (caseSubtype?.trim()) payload.case_subtype = caseSubtype.trim();
+  if (apptDate?.trim()) payload.appt_date = apptDate.trim();
+  if (apptTime?.trim()) payload.appt_time = apptTime.trim();
+  if (apptSetter?.trim()) payload.appt_setter = apptSetter.trim();
+  if (ic?.trim()) payload.ic = ic.trim();
+  if (attorneyAssigned?.trim())
+    payload.attorney_assigned = attorneyAssigned.trim();
 
   try {
-  setSaving(true);
+    setSaving(true);
 
-  const savedClient = initialData.id
-    ? await api.updateClient(initialData.id, payload)
-    : await api.createClient(payload);
+    const savedClient = initialData.id
+      ? await api.updateClient(initialData.id, payload)
+      : await api.createClient(payload);
 
-  onSave(savedClient);
-  setSaving(false);
-
-} catch (err) {
-  setSaving(false);
-  setErrMsg(err.message || "Error saving client");
-}
-    }
-  };
+    onSave(savedClient);
+    setSaving(false);
+  } catch (err) {
+    setSaving(false);
+    setErrMsg(err.message || "Error saving client");
+  }
+};
 
   return (
     <div className="modal-backdrop cc-modal" onClick={onClose}>
