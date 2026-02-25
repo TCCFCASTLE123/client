@@ -62,34 +62,20 @@ const [attorneyAssigned, setAttorneyAssigned] = useState(initialData.attorney_as
     if (ic && ic.trim()) payload.ic = ic.trim();
 if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = attorneyAssigned.trim();
 
-    try {
-      setSaving(true);
+  try {
+  setSaving(true);
 
-    const data = initialData.id
-  ? await api.updateClient(initialData.id, payload)
-  : await api.createClient(payload);
+  const savedClient = initialData.id
+    ? await api.updateClient(initialData.id, payload)
+    : await api.createClient(payload);
 
-onSave(data);
+  onSave(savedClient);
+  setSaving(false);
 
-      if (response.status === 401 || response.status === 403) {
-        setSaving(false);
-        redirectToLogin();
-        return;
-      }
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        setErrMsg((data && (data.error || data.message)) || "Failed to save client.");
-        setSaving(false);
-        return;
-      }
-
-      onSave(data);
-      setSaving(false);
-    } catch (err) {
-      setSaving(false);
-      setErrMsg(err.message || "Error saving client");
+} catch (err) {
+  setSaving(false);
+  setErrMsg(err.message || "Error saving client");
+}
     }
   };
 
