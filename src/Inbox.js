@@ -6,102 +6,8 @@ import ConversationHeader from "./inbox/ConversationHeader";
 import ConversationPanel from "./inbox/ConversationPanel";
 import { useLocation } from "react-router-dom";
 import api from "./services/api";
-
-function canonicalPhone(input) {
-  if (!input) return "";
-  const digits = String(input).replace(/\D/g, "");
-  if (digits.length === 11 && digits.startsWith("1")) return digits.slice(1);
-  if (digits.length === 10) return digits;
-  return digits;
-}
-
-function formatPhoneUS(input) {
-  const d = String(input || "").replace(/\D/g, "");
-  const ten = d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
-  if (ten.length !== 10) return input || "";
-  return `${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`;
-}
-
-/** =========================
- * STATUS COLORS (border + pill)
- * ========================= */
-function statusThemeByName(name) {
-  const MAP = {
-    "No Show": { border: "#f4c542", pillBg: "#fff3c4", pillText: "#7a5a00" },
-    Set: { border: "#cbd5e1", pillBg: "#f1f5f9", pillText: "#334155" },
-    "Attempted/Unsuccessful": { border: "#55c7da", pillBg: "#d9f6fb", pillText: "#0b5c6a" },
-    "Working To Set": { border: "#a78bfa", pillBg: "#ede9fe", pillText: "#5b21b6" },
-    Showed: { border: "#94a3b8", pillBg: "#e2e8f0", pillText: "#475569" },
-    "Did Not Retain": { border: "#f59e0b", pillBg: "#ffedd5", pillText: "#92400e" },
-    "No Money": { border: "#6b7280", pillBg: "#e5e7eb", pillText: "#374151" },
-    Retained: { border: "#22c55e", pillBg: "#dcfce7", pillText: "#166534" },
-    Pending: { border: "#fbbf24", pillBg: "#fef9c3", pillText: "#854d0e" },
-    "Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
-    "Seen Can't Help": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
-    "Referred Out": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
-    "No Longer Needs Assistance": { border: "#ef4444", pillBg: "#fee2e2", pillText: "#991b1b" },
-  };
-
-  return MAP[name] || {
-    border: "#e2e8f0",
-    pillBg: "#f1f5f9",
-    pillText: "#334155",
-  };
-}
-
-
-/* =========================
-   Tiny beep (no audio file)
-   ========================= */
-function playBeep() {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioContext();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.type = "sine";
-    o.frequency.value = 880;
-    g.gain.value = 0.04;
-    o.start();
-    setTimeout(() => {
-      o.stop();
-      ctx.close();
-    }, 120);
-  } catch {}
-}
-
-/** =========================
- * Shared auth helpers
- * ========================= */
-function getToken() {
-  return localStorage.getItem("token") || "";
-}
-
-function redirectToLogin() {
-  localStorage.removeItem("token");
-  window.location.href = "/login";
-}
-
-/** =========================
- * Helper: nice sender label
- * ========================= */
-function prettyName(raw) {
-  const s = String(raw || "").trim();
-  if (!s) return "";
-  if (s === "me") return "You";
-  if (s === "agent") return "Agent";
-  if (s === "system") return "Automated";
-  if (s === "client") return "Client";
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-function safeDate(ts) {
-  const d = ts ? new Date(ts) : new Date();
-  return isNaN(d.getTime()) ? new Date() : d;
-}
-
+import { canonicalPhone, formatPhoneUS } from "./utils/phone";
+import { statusThemeByName } from "./utils/statusTheme";
 /** =========================
  * ClientForm
  * (removed intake coordinator field)
@@ -159,14 +65,11 @@ if (attorneyAssigned && attorneyAssigned.trim()) payload.attorney_assigned = att
     try {
       setSaving(true);
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + getToken(),
-        },
-        body: JSON.stringify(payload),
-      });
+    const data = initialData.id
+  ? await api.updateClient(initialData.id, payload)
+  : await api.createClient(payload);
+
+onSave(data);
 
       if (response.status === 401 || response.status === 403) {
         setSaving(false);
@@ -361,7 +264,6 @@ const [mobileView, setMobileView] = useState("clients");
 // clients | chat
   const [newMsg, setNewMsg] = useState("");
   const textareaRef = useRef(null);
-  const [typing, setTyping] = useState(false);
 const [showDetails, setShowDetails] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
   const [editClientData, setEditClientData] = useState(null);
@@ -373,8 +275,6 @@ const [showDetails, setShowDetails] = useState(false);
   const toastTimerRef = useRef(null);
   const [highlightClientId, setHighlightClientId] = useState(null);
   const highlightTimerRef = useRef(null);
-
-  const selectedClientId = selectedClient?.id || null;
 
   const location = useLocation();
   const clientIdFromUrl = useMemo(() => {
@@ -401,20 +301,6 @@ const [showDetails, setShowDetails] = useState(false);
     }
   }, []);
 
-  const showToast = (text, clientId) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ show: true, text, clientId: clientId || null });
-    toastTimerRef.current = setTimeout(() => {
-      setToast((t) => ({ ...t, show: false }));
-    }, 4200);
-  };
-
-  const flashClient = (clientId) => {
-    if (!clientId) return;
-    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-    setHighlightClientId(clientId);
-    highlightTimerRef.current = setTimeout(() => setHighlightClientId(null), 1400);
-  };
 useEffect(() => {
   selectedClientIdRef.current = selectedClient?.id || null;
 }, [selectedClient]);
@@ -426,16 +312,6 @@ useEffect(() => {
     }
   }, [messages]);
 
-  // Typing indicator
-  useEffect(() => {
-    if (newMsg) {
-      setTyping(true);
-      const timeout = setTimeout(() => setTyping(false), 1200);
-      return () => clearTimeout(timeout);
-    } else {
-      setTyping(false);
-    }
-  }, [newMsg]);
 
   useEffect(() => {
   const el = textareaRef.current;
@@ -527,24 +403,6 @@ const handleDeleteClient = async () => {
   }
 };
 
-const handleStatusChange = async (clientId, statusId) => {
-  try {
-    await api.updateClientStatus(clientId, statusId);
-
-    setClients((prev) =>
-      (Array.isArray(prev) ? prev : []).map((c) =>
-        c.id === clientId ? { ...c, status_id: statusId } : c
-      )
-    );
-
-    if (selectedClient && selectedClient.id === clientId) {
-      setSelectedClient({ ...selectedClient, status_id: statusId });
-    }
-
-  } catch (err) {
-    alert(err.message || "Failed to update status.");
-  }
-}; 
 
   const getStatusName = (statusId) => {
     const list = Array.isArray(statuses) ? statuses : [];
