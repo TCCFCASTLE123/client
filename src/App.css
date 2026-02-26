@@ -61,15 +61,11 @@ html, body, #root {
 
 
 .inbox-container {
-  display: flex;
   flex: 1;
+  display: flex;
+  margin: 20px auto;
+  max-width: 1200px;
   width: 100%;
-  max-width: 1500px;   /* wide but not crazy */
-  margin: 24px auto;   /* center it */
-  background: var(--panel);
-  border-radius: 18px;
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
 }
 /* =========================================================
    Sidebar
