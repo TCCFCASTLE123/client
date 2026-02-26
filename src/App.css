@@ -55,15 +55,20 @@ html, body, #root {
 
 .inbox-container {
   display: flex;
+  flex: 1;
   width: 100%;
-  max-width: 1600px;   /* modern wide layout */
-  margin: 0 auto;
+  max-width: 1500px;   /* wide but not crazy */
+  margin: 24px auto;   /* center it */
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 /* =========================================================
    Sidebar
    ========================================================= */
 .inbox-sidebar {
-  width: 260px;
+  width: 340px;
   background: var(--panel-muted);
   padding: 18px 16px;
   border-right: 1px solid var(--border);
@@ -222,7 +227,7 @@ main {
 
 /* Message bubble */
 .message {
-  max-width: 68%;
+  max-width: 80%;
   padding: 12px 14px;
   border-radius: 18px;
   font-size: 14px;
