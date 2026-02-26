@@ -3,15 +3,6 @@
    - Same layout, cleaner look
    - Shorter + reusable styles for dropdowns/pills
    ========================================================= */
-html, body, #root {
-  height: 100%;
-}
-
-.App {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
 
 /* ---------- Design Tokens ---------- */
 :root {
