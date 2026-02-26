@@ -20,10 +20,12 @@ function NormalizePath() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Collapse multiple slashes (e.g. //inbox) into a single slash
     const fixedPathname = location.pathname.replace(/\/{2,}/g, "/");
     if (fixedPathname !== location.pathname) {
-      navigate({ pathname: fixedPathname, search: location.search }, { replace: true });
+      navigate(
+        { pathname: fixedPathname, search: location.search },
+        { replace: true }
+      );
     }
   }, [location.pathname, location.search, navigate]);
 
@@ -106,7 +108,9 @@ function Header({ onLogout }) {
 }
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [loggedIn, setLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  );
 
   if (!loggedIn) {
     return <Login onLogin={() => setLoggedIn(true)} />;
@@ -116,7 +120,15 @@ function App() {
     <Router>
       <NormalizePath />
 
-      <div className="App">
+      <div
+        className="App"
+        style={{
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <Header
           onLogout={() => {
             localStorage.clear();
@@ -124,24 +136,21 @@ function App() {
           }}
         />
 
-<main
-  style={{
-    flex: 1,
-    minHeight: 0,
-    display: "flex",
-  }}
->
+        <main
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            overflow: "hidden",
+          }}
+        >
           <Routes>
             <Route path="/" element={<Navigate to="/inbox" replace />} />
             <Route path="/inbox" element={<Inbox />} />
-
-            {/* NEW: Clients Page (filters + list) */}
             <Route path="/clients" element={<ClientsPage />} />
-
             <Route path="/admin/templates" element={<AdminTemplates />} />
             <Route path="/admin/templates/new" element={<TemplateFormPage />} />
             <Route path="/admin/templates/:id" element={<TemplateFormPage />} />
-
             <Route path="*" element={<Navigate to="/inbox" replace />} />
           </Routes>
         </main>
