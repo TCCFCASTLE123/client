@@ -92,7 +92,7 @@ export default function ConversationPanel({
                 padding: "8px 14px",
                 borderRadius: 14,
                 margin: "8px 0",
-                maxWidth: "70%",
+                maxWidth: "85%",
                 width: "fit-content",
                 wordBreak: "break-word",
                 overflowWrap: "anywhere",
