@@ -53,19 +53,13 @@ html, body, #root {
 }
 
 
-/* ---------- Layout Container ---------- */
 .inbox-container {
   display: flex;
-  height: calc(100% - 60px);
-  max-width: 980px;
-  margin: 18px auto;
-  background: var(--panel);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  border: 1px solid rgba(227, 233, 239, 0.8);
+  height: calc(100vh - 120px);
+  width: 100%;
+  max-width: 1600px;   /* modern wide layout */
+  margin: 0 auto;
 }
-
 /* =========================================================
    Sidebar
    ========================================================= */
@@ -443,12 +437,6 @@ html, body, #root {
 
 
 
-/* Make the app area fit the screen.
-   If your header area is taller/shorter, adjust the 120px number. */
-.inbox-container {
-  height: calc(100vh - 120px);
-  margin: 20px auto;
-}
 
 /* Sidebar becomes a fixed column; ONLY the list scrolls */
 .inbox-sidebar {
