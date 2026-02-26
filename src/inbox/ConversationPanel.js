@@ -44,12 +44,6 @@ export default function ConversationPanel({
         minHeight: 0,
       }}
     >
-      {/* HEADER */}
-      <div style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontWeight: 900 }}>
-          Conversation with {selectedClient.name}
-        </h2>
-      </div>
 
       {/* MESSAGE LIST (SCROLL AREA) */}
       <div
