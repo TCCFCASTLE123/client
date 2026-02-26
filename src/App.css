@@ -10,7 +10,7 @@ html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #eef2f7;
+  background: #eef4ff;
   color: #283645;
 }
 
@@ -62,9 +62,9 @@ main {
   max-width: 1500px; /* or whatever you chose */
   width: 65%;
   margin: 24px auto;
-  background: #ffffff;
+ background: #f8fafc;
   border-radius: 20px;
-  box-shadow: 0 8px 40px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 40px rgba(48,81,228,0.08);
   overflow: hidden;
 }
 
