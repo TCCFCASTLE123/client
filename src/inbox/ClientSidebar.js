@@ -13,16 +13,19 @@ function ClientSidebar({
   setSearch,
 }) {
   return (
-    <aside
-      className="inbox-sidebar"
-      style={{
-        flex: "0 0 280px",
-        background: "#f8fafc",
-        padding: 18,
-        height: "100%",
-        overflowY: "auto",
-      }}
-    >
+<aside
+  className="inbox-sidebar"
+  style={{
+    width: 340,
+    minWidth: 340,
+    maxWidth: 380,
+    background: "#ffffff",
+    padding: 18,
+    height: "100%",
+    overflowY: "auto",
+    borderRight: "1px solid #e5e7eb",
+  }}
+>
       <h3 style={{ marginTop: 0 }}>Clients</h3>
 
       <button
