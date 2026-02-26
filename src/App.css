@@ -52,7 +52,15 @@ html, body, #root {
   box-shadow: 0 2px 8px rgba(50,65,80,0.10);
 }
 
+html, body, #root {
+  height: 100%;
+}
 
+.App {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .inbox-container {
   display: flex;
   flex: 1;
@@ -547,8 +555,9 @@ html, body, #root {
 }
 /* ===== FIX: full page scroll + left list scroll only ===== */
 
-/* allow the page to scroll */
-body { overflow-y: auto; overflow-x: hidden; }
+body {
+  overflow: hidden;
+}
 
 /* keep container from trapping scroll */
 .inbox-container { overflow: hidden; }
