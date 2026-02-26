@@ -72,12 +72,21 @@ useEffect(() => {
   selectedClientIdRef.current = selectedClient?.id || null;
 }, [selectedClient]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+const prevClientRef = useRef(null);
+const prevLengthRef = useRef(0);
+
+useEffect(() => {
+  const isSameClient = prevClientRef.current === selectedClient?.id;
+  const newMessageAdded =
+    messages && messages.length > prevLengthRef.current;
+
+  if (isSameClient && newMessageAdded) {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  prevClientRef.current = selectedClient?.id;
+  prevLengthRef.current = messages?.length || 0;
+}, [messages, selectedClient]);
 
 
   useEffect(() => {
