@@ -59,7 +59,7 @@ main {
 .inbox-container {
   flex: 1;
   display: flex;
-  width: 87%;
+  width: 75%;
   margin: 20px auto;
   background: white;
   border-radius: 16px;
