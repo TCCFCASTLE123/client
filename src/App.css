@@ -55,7 +55,7 @@ html, body, #root {
 
 .inbox-container {
   display: flex;
-  height: calc(100vh - 120px);
+  height: 
   width: 100%;
   max-width: 1600px;   /* modern wide layout */
   margin: 0 auto;
@@ -77,7 +77,24 @@ html, body, #root {
   font-size: 16px;
   color: var(--brand-2);
 }
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
+main {
+  flex: 1;
+  display: flex;
+}
+
+.inbox-container {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
 /* Primary sidebar button */
 .inbox-sidebar button {
   width: 100%;
