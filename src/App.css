@@ -158,12 +158,15 @@ main {
    ========================================================= */
 .inbox-main {
   flex: 1;
-  padding: 22px 20px;
   display: flex;
   flex-direction: column;
-  background: #f9fbfd;
+  overflow: hidden;
 }
 
+.messages {
+  flex: 1;
+  overflow-y: auto;
+}
 /* Header row */
 .inbox-main-header {
   display: flex;
