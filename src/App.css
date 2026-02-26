@@ -10,7 +10,7 @@ html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f7fa;
+  background: #eef2f7;
   color: #283645;
 }
 
@@ -59,10 +59,12 @@ main {
 .inbox-container {
   flex: 1;
   display: flex;
-  width: 75%;
-  margin: 20px auto;
-  background: white;
-  border-radius: 16px;
+  max-width: 1500px; /* or whatever you chose */
+  width: 65%;
+  margin: 24px auto;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
@@ -71,7 +73,7 @@ main {
    =============================== */
 
 .inbox-sidebar {
-  width: 320px;
+  width: 360px;
   background: #f6f8fa;
   border-right: 1px solid #e3e9ef;
   padding: 18px 16px;
@@ -141,13 +143,13 @@ main {
 .messages {
   flex: 1;
   overflow-y: auto;
-  background: white;
-  padding: 18px;
+  background: #f9fbff;
+  padding: 20px;
   border-radius: 16px;
-  border: 1px solid #e3e9ef;
+  border: 1px solid #e6ecf5;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* Message Bubble */
