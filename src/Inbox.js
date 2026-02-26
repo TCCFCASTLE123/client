@@ -75,19 +75,6 @@ useEffect(() => {
 const prevClientRef = useRef(null);
 const prevLengthRef = useRef(0);
 
-useEffect(() => {
-  const isSameClient = prevClientRef.current === selectedClient?.id;
-  const newMessageAdded =
-    messages && messages.length > prevLengthRef.current;
-
-  if (isSameClient && newMessageAdded) {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
-
-  prevClientRef.current = selectedClient?.id;
-  prevLengthRef.current = messages?.length || 0;
-}, [messages, selectedClient]);
-
 
   useEffect(() => {
   const el = textareaRef.current;
@@ -123,10 +110,14 @@ const handleSend = async (e) => {
       setSelectedFile(null);
     }
 
-    // Send text message
-    if (newMsg.trim()) {
-      await api.sendMessage(selectedClient.id, newMsg.trim());
-      setNewMsg("");
+if (newMsg.trim()) {
+  await api.sendMessage(selectedClient.id, newMsg.trim());
+  setNewMsg("");
+
+  setTimeout(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, 50);
+}
     }
 
   } catch (err) {
@@ -293,8 +284,7 @@ const handleSelectClient = (client) => {
   setNewMsg={setNewMsg}
   textareaRef={textareaRef}
   messagesEndRef={messagesEndRef}
-/>
-                  
+/>             
         </main>
 
         {showClientForm && (
