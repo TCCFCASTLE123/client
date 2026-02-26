@@ -127,9 +127,8 @@ function App() {
 <main
   style={{
     flex: 1,
-    minHeight: 0,   // 👈 THIS is the important one
+    minHeight: 0,
     display: "flex",
-    flexDirection: "column",
   }}
 >
           <Routes>
