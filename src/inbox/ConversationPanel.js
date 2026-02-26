@@ -1,5 +1,5 @@
 // src/inbox/ConversationPanel.js
-import React, { useRef, useEffect } from "react";
+import React from "react";
 import { format } from "date-fns";
 
 function safeDate(ts) {
@@ -40,20 +40,21 @@ export default function ConversationPanel({
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        height: "100%",
         minHeight: 0,
       }}
     >
-
-      {/* MESSAGE LIST (SCROLL AREA) */}
+      {/* MESSAGE LIST */}
       <div
         style={{
           flex: 1,
+          display: "flex",
+          flexDirection: "column",   // 🔥 THIS FIXES ALIGNMENT
           overflowY: "auto",
           padding: 18,
           background: "#f4f7fa",
           borderRadius: 12,
           boxShadow: "0 1px 4px #e0e7ef",
+          gap: 8,
         }}
       >
         {loadingMessages && <div>Loading messages...</div>}
@@ -80,34 +81,29 @@ export default function ConversationPanel({
               key={i}
               className={`message ${bubbleClass}`}
               style={{
+                alignSelf: isOutbound ? "flex-end" : "flex-start", // 🔥 alignment
                 background: isSystem ? "#f1f5f9" : undefined,
                 border: isSystem ? "1px solid #e2e8f0" : undefined,
                 color: isSystem ? "#6d28d9" : undefined,
-                padding: "8px 14px",
-                borderRadius: 14,
-                margin: "8px 0",
-                maxWidth: "85%",
-                width: "fit-content",
+                padding: "10px 14px",
+                borderRadius: 16,
+                maxWidth: "75%",
                 wordBreak: "break-word",
-                overflowWrap: "anywhere",
+                whiteSpace: "pre-wrap",
               }}
             >
               {msg.image_url ? (
-                <div style={{ marginTop: 4 }}>
-                  <img
-                    src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
-                    alt="attachment"
-                    style={{
-                      maxWidth: 260,
-                      borderRadius: 12,
-                      display: "block",
-                    }}
-                  />
-                </div>
+                <img
+                  src={`${process.env.REACT_APP_API_URL}${msg.image_url}`}
+                  alt="attachment"
+                  style={{
+                    maxWidth: 260,
+                    borderRadius: 12,
+                    display: "block",
+                  }}
+                />
               ) : (
-                <div style={{ whiteSpace: "pre-wrap" }}>
-                  {msg.text}
-                </div>
+                msg.text
               )}
 
               <div
@@ -115,6 +111,7 @@ export default function ConversationPanel({
                   marginTop: 6,
                   fontSize: 11,
                   opacity: 0.7,
+                  textAlign: isOutbound ? "right" : "left",
                 }}
               >
                 {format(msgDate, "h:mm a")}
@@ -126,7 +123,7 @@ export default function ConversationPanel({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* MESSAGE INPUT */}
+      {/* INPUT BAR */}
       <form
         onSubmit={handleSend}
         style={{
