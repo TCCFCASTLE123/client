@@ -55,7 +55,6 @@ html, body, #root {
 
 .inbox-container {
   display: flex;
-  height: 
   width: 100%;
   max-width: 1600px;   /* modern wide layout */
   margin: 0 auto;
