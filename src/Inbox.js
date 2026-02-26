@@ -235,7 +235,7 @@ const handleSelectClient = (client) => {
   className="inbox-container"
   style={{
     display: "flex",
-    height: "calc(100vh - 140px)",
+    height: "100%",
     width: "100%",
     overflow: "hidden",
     background: "#f8fafc",
