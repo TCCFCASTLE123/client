@@ -1,97 +1,23 @@
 /* =========================================================
-   Castle Consulting Messaging — Cleaner App.css
-   - Same layout, cleaner look
-   - Shorter + reusable styles for dropdowns/pills
+   Castle Consulting Messaging — CLEAN STABLE VERSION
    ========================================================= */
-html, body, #root {
-  height: 100%;
-  margin: 0;
-}
 
-.App {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+/* ===============================
+   Base Layout Foundation
+   =============================== */
 
-main {
-  flex: 1;
-  display: flex;
-}
-/* ---------- Design Tokens ---------- */
-:root {
-  --bg: #f5f7fa;
-  --panel: #ffffff;
-  --panel-muted: #f6f8fa;
-
-  --text: #283645;
-  --muted: #6b7280;
-
-  --border: #e3e9ef;
-
-  --brand: #3051e4;
-  --brand-2: #324150;
-
-  --danger: #d14343;
-
-  --radius: 12px;
-  --radius-lg: 16px;
-
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 24px rgba(50,65,80,0.12);
-
-  --focus: 0 0 0 3px rgba(48,81,228,0.18);
-}
-
-/* ---------- Base Reset ---------- */
-* { box-sizing: border-box; }
 html, body, #root {
   height: 100%;
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  background: #f5f7fa;
+  color: #283645;
 }
 
-/* ---------- Header ---------- */
-.app-header {
-  background: var(--brand-2);
-  color: #fff;
-  padding: 18px 0;
-  font-size: 1.4rem;
-  font-weight: 650;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(50,65,80,0.10);
+* {
+  box-sizing: border-box;
 }
 
-
-.inbox-container {
-  flex: 1;
-  display: flex;
-  max-width: 1200px;
-  margin: 20px auto;
-  width: 100%;
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-}
-/* =========================================================
-   Sidebar
-   ========================================================= */
-.inbox-sidebar {
-  width: 340px;
-  background: var(--panel-muted);
-  padding: 18px 16px;
-  border-right: 1px solid var(--border);
-  overflow-y: auto;
-}
-
-.inbox-sidebar h3 {
-  margin: 0 0 14px;
-  font-weight: 750;
-  font-size: 16px;
-  color: var(--brand-2);
-}
 .App {
   min-height: 100vh;
   display: flex;
@@ -103,569 +29,21 @@ main {
   display: flex;
 }
 
-.inbox-container {
-  flex: 1;
-  display: flex;
-  width: 100%;
-  margin: 0;
-  overflow: hidden;
-}
-/* Primary sidebar button */
-.inbox-sidebar button {
-  width: 100%;
-  padding: 10px 12px;
-  margin-bottom: 14px;
-  background: var(--brand-2);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-weight: 650;
-  cursor: pointer;
-  transition: transform 0.06s ease, opacity 0.15s ease, background 0.2s ease;
-}
-.inbox-sidebar button:hover { background: #2a3744; }
-.inbox-sidebar button:active { transform: translateY(1px); }
+/* ===============================
+   Header
+   =============================== */
 
-/* Client list */
-.inbox-sidebar ul { list-style: none; padding: 0; margin: 0; }
-
-.inbox-sidebar li {
-  background: var(--panel);
-  padding: 12px 12px;
-  margin-bottom: 10px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.15s ease, border 0.15s ease, transform 0.06s ease;
-  border: 1px solid rgba(227,233,239,0.9);
-  box-shadow: var(--shadow-sm);
-  color: var(--brand-2);
-  font-size: 13px;
-  line-height: 1.2;
-}
-.inbox-sidebar li:hover { transform: translateY(-1px); }
-
-/* Selected state (cleaner than full dark) */
-.inbox-sidebar li.selected {
-  border-color: rgba(48,81,228,0.35);
-  box-shadow: 0 6px 18px rgba(48,81,228,0.10);
-  background: rgba(48,81,228,0.06);
-}
-
-/* Name + subline */
-.inbox-sidebar {
-  width: 280px;
-  display: flex;
-  flex-direction: column;
-}
-
-.inbox-sidebar ul {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.inbox-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.messages {
-  flex: 1;
-  overflow-y: auto;
-}
-/* Header row */
-.inbox-main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-
-.inbox-main-header h2 {
-  font-weight: 800;
-  font-size: 22px;
-  color: var(--text);
-  margin: 0;
-}
-
-/* Action buttons */
-.inbox-main-header button {
-  font-weight: 650;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: transform 0.06s ease, opacity 0.15s ease;
-}
-.inbox-main-header button:active { transform: translateY(1px); }
-
-.inbox-main-header button.edit-btn {
-  background: #6b7280;
-  color: #fff;
-}
-.inbox-main-header button.edit-btn:hover { opacity: 0.92; }
-
-.inbox-main-header button.delete-btn {
-  background: var(--danger);
-  color: #fff;
-}
-.inbox-main-header button.delete-btn:hover { opacity: 0.92; }
-
-/* =========================================================
-   Messages
-   ========================================================= */
-.messages {
-  background: var(--panel);
-  flex: 1;
-  padding: 18px 18px;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(227,233,239,0.9);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Message bubble */
-.message {
-  max-width: 80%;
-  padding: 12px 14px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.35;
-  word-break: break-word;
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-/* Incoming */
-.message.client {
-  background: #f2f5fb;
-  color: #222;
-  align-self: flex-start;
-  border-radius: 18px 18px 18px 8px;
-  border: 1px solid rgba(227,233,239,0.9);
-}
-
-/* Outgoing */
-.message.me {
-  background: var(--brand);
-  color: #fff;
-  align-self: flex-end;
-  border-radius: 18px 18px 8px 18px;
-  box-shadow: 0 6px 18px rgba(48,81,228,0.25);
-}
-
-/* Avatar */
-.message-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1px solid rgba(227,233,239,0.9);
-  color: var(--brand);
-  font-weight: 800;
-  font-size: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  user-select: none;
-}
-
-.message-text { flex: 1; white-space: pre-wrap; }
-
-.message-timestamp {
-  font-size: 10px;
-  color: rgba(255,255,255,0.82);
-  opacity: 0.9;
-  margin-top: 4px;
-  user-select: none;
-}
-.message.client .message-timestamp { color: rgba(107,114,128,0.85); }
-
-/* Date divider */
-.date-divider {
+.app-header {
+  background: #324150;
+  color: white;
+  padding: 18px 0;
   text-align: center;
-  font-size: 12px;
-  color: #98a2b3;
-  margin: 14px 0 6px;
-  font-weight: 650;
-  letter-spacing: 0.6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* =========================================================
-   Input Bar
-   ========================================================= */
-.message-input-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 12px;
-  background: rgba(246,248,250,0.9);
-  border: 1px solid rgba(227,233,239,0.9);
-  border-radius: var(--radius-lg);
-}
-
-.message-input-row input[type="text"] {
-  flex: 1;
-  padding: 12px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(203,213,225,0.95);
-  font-size: 15px;
-  outline: none;
-  background: #fff;
-}
-.message-input-row input[type="text"]:focus {
-  border-color: rgba(48,81,228,0.55);
-  box-shadow: var(--focus);
-}
-
-.message-input-row button {
-  background: var(--brand);
-  color: #fff;
-  font-weight: 750;
-  font-size: 14px;
-  padding: 10px 18px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.06s ease, opacity 0.15s ease;
-}
-.message-input-row button:hover:not(:disabled) { opacity: 0.92; }
-.message-input-row button:active { transform: translateY(1px); }
-.message-input-row button:disabled { opacity: 0.45; cursor: not-allowed; }
-
-/* =========================================================
-   Reusable Form Controls (Status, Office, Case Type, etc.)
-   Use this class for ALL dropdowns to keep CSS short.
-   ========================================================= */
-.select,
-.status-dropdown {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(203,213,225,0.95);
-  background: #fff;
-  color: var(--brand-2);
-  font-size: 13px;
-  outline: none;
-  height: 32px;
-  transition: box-shadow 0.15s ease, border 0.15s ease, background 0.15s ease;
-}
-.select:focus,
-.status-dropdown:focus {
-  border-color: rgba(48,81,228,0.55);
-  box-shadow: var(--focus);
-}
-.select:hover,
-.status-dropdown:hover {
-  background: #fbfcff;
-}
-
-/* Pills */
-.pill,
-.status-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid rgba(227,233,239,0.95);
-  background: #eef2f7;
-  color: var(--brand);
-  white-space: nowrap;
-}
-
-/* Status colors (keep your existing mapping) */
-.status-label[data-status="No Show"] { background: #ffe066; color: #8b6500; border-color: rgba(139,101,0,0.15); }
-.status-label[data-status="Set"] { background: #fff; color: var(--text); }
-.status-label[data-status="Attempted/Unsuccessful"] { background: #8ee7f3; color: #026579; border-color: rgba(2,101,121,0.15); }
-.status-label[data-status="Working To Set"] { background: #e4d2fa; color: #6a2ea7; border-color: rgba(106,46,167,0.15); }
-.status-label[data-status="Showed"] { background: #e9ecef; color: #5f6368; }
-.status-label[data-status="Did Not Retain"] { background: #ffc6a0; color: #8a4b00; border-color: rgba(138,75,0,0.15); }
-.status-label[data-status="No Money"] { background: #adb5bd; color: #2f3437; }
-.status-label[data-status="Retained"] { background: #a3e6a1; color: #1f6a36; border-color: rgba(31,106,54,0.15); }
-.status-label[data-status="Pending"] { background: #fffacc; color: #8c7f00; border-color: rgba(140,127,0,0.15); }
-.status-label[data-status="Can't Help"],
-.status-label[data-status="Seen Can't Help"] { background: #ffb4b4; color: #9a0b0b; border-color: rgba(154,11,11,0.15); }
-
-/* =========================================================
-   Modal
-   ========================================================= */
-.modal-backdrop {
-  position: fixed;
-  z-index: 9;
-  inset: 0;
-  background: rgba(30,39,66,0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.client-modal input,
-.client-modal select,
-.client-modal textarea {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(210,218,230,0.95);
-  font-size: 15px;
-  outline: none;
-}
-.client-modal input:focus,
-.client-modal select:focus,
-.client-modal textarea:focus {
-  border-color: rgba(48,81,228,0.55);
-  box-shadow: var(--focus);
-}
-
-.client-modal textarea { resize: vertical; }
-
-/* =========================================================
-   Scrollbar (messages only)
-   ========================================================= */
-.messages::-webkit-scrollbar { width: 7px; }
-.messages::-webkit-scrollbar-track { background: #f1f3f6; border-radius: 4px; }
-.messages::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.messages::-webkit-scrollbar-thumb:hover { background: #a0b0d6; }
-
-/* =========================================================
-   Responsive
-   ========================================================= */
-@media (max-width: 720px) {
-  .inbox-container {
-    flex-direction: column;
-    height: 100%;
-    max-width: 100vw;
-    margin: 0;
-    border-radius: 0;
-  }
-  .inbox-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .inbox-main {
-    padding: 16px 14px;
-    height: calc(100vh - 180px);
-  }
-  .messages { max-height: 320px; }
-}/* ===== Layout: prevent "two sliders" ===== */
-html, body, #root {
-  height: 100%;
-}
-
-
-
-
-
-/* Sidebar becomes a fixed column; ONLY the list scrolls */
-.inbox-sidebar {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* prevents a second scrollbar inside sidebar */
-}
-
-.sidebar-top {
-  flex: 0 0 auto;
-}
-
-.client-list {
-  flex: 1 1 auto;
-  overflow-y: auto; /* ✅ only scrollbar you should see on left */
-  padding-right: 6px;
-}
-
-.client-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-/* Client card */
-.client-card {
-  background: white;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  border-radius: 12px;
-}
-
-.client-card.selected {
-  outline: 2px solid rgba(48, 81, 228, 0.18);
-}
-
-/* Status dot (color without duplicate text) */
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #cbd5e1;
-  display: inline-block;
-  margin-right: 8px;
-  border: 2px solid #eef2ff;
-}
-
-.status-dot[data-status="No Show"] { background: #ffe066; }
-.status-dot[data-status="Set"] { background: #e0e6ed; }
-.status-dot[data-status="Attempted/Unsuccessful"] { background: #8ee7f3; }
-.status-dot[data-status="Working To Set"] { background: #e4d2fa; }
-.status-dot[data-status="Showed"] { background: #e9ecef; }
-.status-dot[data-status="Did Not Retain"] { background: #ffc6a0; }
-.status-dot[data-status="No Money"] { background: #adb5bd; }
-.status-dot[data-status="Retained"] { background: #a3e6a1; }
-.status-dot[data-status="Pending"] { background: #fffacc; }
-.status-dot[data-status="Can't Help"] { background: #ffb4b4; }
-.status-dot[data-status="Seen Can't Help"] { background: #ffb4b4; }
-.status-dot[data-status="Referred Out"] { background: #c7d2fe; }
-
-/* Tighten dropdown to fit the "cube" (card) */
-.status-dropdown {
-  width: 100%;
-  height: 28px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  margin-top: 8px;
-  max-width: 100%;
-}
-
-/* Sidebar search input if needed */
-.client-search {
-  width: 100%;
-  padding: 8px 10px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-} .message.system {
-  background: #eef2f7 !important;
-  color: #7c3aed !important;
-  border: 1px solid #e3e9ef !important;
-  border-radius: 14px !important;
-}
-.message.system .message-timestamp {
-  color: #6d28d9 !important;
-}
-/* ===== FIX: full page scroll + left list scroll only ===== */
-
-body {
-  overflow: hidden;
-}
-
-/* keep container from trapping scroll */
-.inbox-container { overflow: hidden; }
-
-/* sidebar should not be the scroll container */
-.inbox-sidebar {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ✅ ONLY the UL list scrolls */
-.inbox-sidebar ul {
-  overflow-y: auto;
-  flex: 1 1 auto;
-  padding-right: 6px;
-}
-/* ==============================
-   ✅ FINAL OVERRIDE: Client Modal
-   Paste at VERY BOTTOM of App.css
-   ============================== */
-.cc-modal {
-  z-index: 9999 !important;
-  padding: 18px !important;
-  background: rgba(15, 23, 42, 0.35) !important;
-}
-
-.cc-modal-card {
-  width: 100% !important;
-  max-width: 520px !important;
-  background: #fff !important;
-  border-radius: 16px !important;
-  padding: 22px !important;
-  box-shadow: 0 12px 36px rgba(0,0,0,0.25) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-}
-
-.cc-modal-title {
-  margin: 0 0 4px 0 !important;
-  font-weight: 800 !important;
-}
-
-.cc-modal-error {
-  background: #fee2e2 !important;
-  color: #991b1b !important;
-  padding: 10px 12px !important;
-  border-radius: 10px !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-}
-
-.cc-row {
-  display: flex !important;
-  gap: 12px !important;
-  min-width: 0 !important;
-}
-
-.cc-row > * {
-  flex: 1 1 0 !important;
-  min-width: 0 !important;
-}
-
-.cc-field {
-  width: 100% !important;
-  height: 38px !important;
-  padding: 8px 10px !important;
-  border-radius: 10px !important;
-  border: 1px solid #cbd5e1 !important;
-  font-size: 14px !important;
-  outline: none !important;
-  background: #fff !important;
-}
-
-.cc-textarea {
-  width: 100% !important;
-  padding: 10px 10px !important;
-  border-radius: 12px !important;
-  border: 1px solid #cbd5e1 !important;
-  font-size: 14px !important;
-  resize: vertical !important;
-}
-
-.cc-btn-row {
-  display: flex !important;
-  gap: 10px !important;
-  margin-top: 4px !important;
-}
-
-.cc-btn {
-  flex: 1 1 0 !important;
-  height: 38px !important;
-  border-radius: 10px !important;
-  border: none !important;
-  font-weight: 800 !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-}
-
-.cc-btn-primary {
-  background: #6366f1 !important;
-  color: #fff !important;
-}
-
-.cc-btn-ghost {
-  background: #e5e7eb !important;
-  color: #111827 !important;
-}
-/* Top nav links */
 .app-header nav a,
 .app-header nav a:visited {
-  color: #e2e8f0;           /* light text */
+  color: #e2e8f0;
   text-decoration: none;
 }
 
@@ -674,82 +52,246 @@ body {
   text-decoration: underline;
 }
 
-.app-header nav a.active {
-  color: #ffffff;
-  font-weight: 800;
-}
-/* ---- Clients Page Modern Table ---- */
-.cc-input2 {
+/* ===============================
+   Inbox Container (MAIN SHELL)
+   =============================== */
+
+.inbox-container {
+  flex: 1;
+  display: flex;
+  max-width: 1200px;
   width: 100%;
-  height: 38px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ===============================
+   Sidebar
+   =============================== */
+
+.inbox-sidebar {
+  width: 320px;
+  background: #f6f8fa;
+  border-right: 1px solid #e3e9ef;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.inbox-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.inbox-sidebar li {
+  background: white;
+  padding: 12px;
+  margin-bottom: 10px;
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  padding: 0 12px;
-  font-weight: 800;
-  background: #fff;
-  color: #0f172a;
-  outline: none;
-}
-
-.cc-input2:focus {
-  border-color: #c7d2fe;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
-}
-
-.cc-btn2 {
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-weight: 900;
   cursor: pointer;
-  color: #0f172a;
+  border: 1px solid #e3e9ef;
+  transition: background 0.15s ease;
 }
 
-.cc-btn2-muted {
-  background: #f8fafc;
-}
-
-.cc-table thead th.cc-th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-  padding: 10px 12px;
-  font-size: 12px;
-  color: #334155;
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.cc-table .cc-td {
-  padding: 10px 12px;
-  font-size: 13px;
-  color: #334155;
-  font-weight: 750;
-  white-space: nowrap;
-  border-bottom: 1px solid #eef2f7;
-}
-
-.cc-table .cc-strong {
-  font-weight: 900;
-  color: #0f172a;
-}
-
-.cc-table .cc-center {
-  text-align: center;
-}
-
-.cc-table tr.cc-tr {
-  cursor: pointer;
-  transition: background 120ms ease;
-}
-
-.cc-table tr.cc-tr:hover {
+.inbox-sidebar li:hover {
   background: #f1f5ff;
 }
 
+.inbox-sidebar li.selected {
+  border-color: rgba(48,81,228,0.3);
+  background: rgba(48,81,228,0.05);
+}
 
+/* ===============================
+   Main Conversation Area
+   =============================== */
 
+.inbox-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+/* ===============================
+   Conversation Header
+   =============================== */
+
+.inbox-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.inbox-main-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* ===============================
+   Messages
+   =============================== */
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid #e3e9ef;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Message Bubble */
+
+.message {
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+/* Incoming */
+
+.message.client {
+  background: #f2f5fb;
+  align-self: flex-start;
+  border-radius: 18px 18px 18px 8px;
+  border: 1px solid #e3e9ef;
+}
+
+/* Outgoing */
+
+.message.me {
+  background: #3051e4;
+  color: white;
+  align-self: flex-end;
+  border-radius: 18px 18px 8px 18px;
+}
+
+/* System */
+
+.message.system {
+  background: #eef2f7;
+  color: #7c3aed;
+  border: 1px solid #e3e9ef;
+}
+
+/* Timestamp */
+
+.message-timestamp {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ===============================
+   Input Bar
+   =============================== */
+
+.message-input-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.message-input-row input[type="text"] {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  font-size: 15px;
+  outline: none;
+}
+
+.message-input-row input[type="text"]:focus {
+  border-color: #3051e4;
+  box-shadow: 0 0 0 3px rgba(48,81,228,0.15);
+}
+
+.message-input-row button {
+  background: #3051e4;
+  color: white;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.message-input-row button:hover {
+  opacity: 0.9;
+}
+
+/* ===============================
+   Status Pills
+   =============================== */
+
+.status-label {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* Status Colors */
+
+.status-label[data-status="No Show"] { background: #ffe066; }
+.status-label[data-status="Set"] { background: #e9ecef; }
+.status-label[data-status="Attempted/Unsuccessful"] { background: #8ee7f3; }
+.status-label[data-status="Working To Set"] { background: #e4d2fa; }
+.status-label[data-status="Showed"] { background: #e9ecef; }
+.status-label[data-status="Did Not Retain"] { background: #ffc6a0; }
+.status-label[data-status="No Money"] { background: #adb5bd; }
+.status-label[data-status="Retained"] { background: #a3e6a1; }
+.status-label[data-status="Pending"] { background: #fffacc; }
+.status-label[data-status="Can't Help"] { background: #ffb4b4; }
+.status-label[data-status="Seen Can't Help"] { background: #ffb4b4; }
+
+/* ===============================
+   Modal
+   =============================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,39,66,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* ===============================
+   Responsive
+   =============================== */
+
+@media (max-width: 768px) {
+  .inbox-container {
+    flex-direction: column;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .inbox-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e3e9ef;
+  }
+
+  .inbox-main {
+    padding: 16px;
+  }
+}
