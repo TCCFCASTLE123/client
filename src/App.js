@@ -124,9 +124,10 @@ function App() {
           }}
         />
 
-        <main
+<main
   style={{
     flex: 1,
+    minHeight: 0,   // 👈 THIS is the important one
     display: "flex",
     flexDirection: "column",
   }}
