@@ -124,7 +124,13 @@ function App() {
           }}
         />
 
-        <main style={{ minHeight: "80vh" }}>
+        <main
+  style={{
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+  }}
+>
           <Routes>
             <Route path="/" element={<Navigate to="/inbox" replace />} />
             <Route path="/inbox" element={<Inbox />} />
