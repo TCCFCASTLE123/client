@@ -260,7 +260,7 @@ const handleSelectClient = (client) => {
   style={{
     flex: 1,
     minWidth: 0,
-    padding: isMobile ? 16 : 32,
+    padding: isMobile ? 16 : 24,
     minHeight: 600,
     height: "100%",
     overflow: "hidden",
