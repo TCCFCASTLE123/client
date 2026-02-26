@@ -110,14 +110,14 @@ const handleSend = async (e) => {
       setSelectedFile(null);
     }
 
-if (newMsg.trim()) {
-  await api.sendMessage(selectedClient.id, newMsg.trim());
-  setNewMsg("");
+    // Send text message
+    if (newMsg.trim()) {
+      await api.sendMessage(selectedClient.id, newMsg.trim());
+      setNewMsg("");
 
-  setTimeout(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, 50);
-}
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     }
 
   } catch (err) {
