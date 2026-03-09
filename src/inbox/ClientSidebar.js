@@ -132,21 +132,21 @@ function ClientSidebar({
                   </span>
                 )}
 
-                {statusName && (
-                  <span
-                    style={{
-                      background: theme.pillBg,
-                      color: theme.pillText,
-                      borderRadius: 999,
-                      padding: "3px 10px",
-                      fontSize: 12,
-                      fontWeight: 800,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {statusName}
-                  </span>
-                )}
+        {statusName && (
+  <span
+    style={{
+      background: theme?.pillBg || "#eef2f7",
+      color: theme?.pillText || "#334155",
+      borderRadius: 999,
+      padding: "4px 10px",
+      fontSize: 12,
+      fontWeight: 800,
+      whiteSpace: "nowrap",
+    }}
+  >
+    {statusName}
+  </span>
+)}
               </div>
 
               <div
