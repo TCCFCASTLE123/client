@@ -194,18 +194,19 @@ function Inbox({
 
       <div className="inbox-container">
 
-        <ClientSidebar
-          inboxClients={inboxClients}
-          selectedClient={selectedClient}
-          highlightClientId={highlightClientId}
-          getStatusName={getStatusName}
-          statusThemeByName={statusThemeByName}
-          formatPhoneUS={formatPhoneUS}
-          handleSelectClient={handleSelectClient}
-          openAddClientForm={openAddClientForm}
-          search={search}
-          setSearch={setSearch}
-        />
+          <ClientSidebar
+  inboxClients={inboxClients}
+  selectedClient={selectedClient}
+  highlightClientId={highlightClientId}
+  getStatusName={getStatusName}
+  statusThemeByName={statusThemeByName}
+  formatPhoneUS={formatPhoneUS}
+  handleSelectClient={handleSelectClient}
+  openAddClientForm={openAddClientForm}
+  search={search}
+  setSearch={setSearch}
+  statuses={statuses}   // 👈 ADD THIS
+/>
 
         <div
           className="inbox-main"
