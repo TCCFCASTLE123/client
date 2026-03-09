@@ -11,7 +11,9 @@ function ClientSidebar({
   openAddClientForm,
   search,
   setSearch,
-}) {
+  statuses,   // 👈 ADD THIS
+})
+{
   return (
 <aside
   className="inbox-sidebar"
@@ -63,9 +65,9 @@ function ClientSidebar({
 
       <ul style={{ padding: 0, listStyle: "none", margin: 0 }}>
         {inboxClients.map((client) => {
-          const statusName = client.status_id
-            ? getStatusName(client.status_id)
-            : "";
+         const statusName = client.status_id
+  ? getStatusName(client.status_id, statuses)
+  : "";
 
           const theme = statusThemeByName(statusName);
 
