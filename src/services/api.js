@@ -43,7 +43,14 @@ async function handleResponse(res) {
 ========================= */
 
 const api = {
+// ---- STATUSES ----
 
+async getStatuses() {
+  const res = await fetch(`${BASE_URL}/api/statuses`, {
+    headers: authHeaders(false),
+  });
+  return handleResponse(res);
+},
   // ---- CLIENTS ----
 
   async getClients() {
