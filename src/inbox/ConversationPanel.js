@@ -139,7 +139,8 @@ const isOutbound =
 <form
   onSubmit={(e) => {
     e.preventDefault();
-    handleSend(e); // 👈 back to event-based
+    handleSend(newMsg);
+    setNewMsg("");
   }}
   style={{
     display: "flex",
@@ -150,16 +151,18 @@ const isOutbound =
     borderTop: "1px solid #e5e7eb",
   }}
 >
-        <textarea
-          ref={textareaRef}
-          placeholder="Type your message..."
-          value={newMsg}
-          onChange={(e) => setNewMsg(e.target.value)}
-onKeyDown={(e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-handleSend(e);
-}}
+<textarea
+  ref={textareaRef}
+  placeholder="Type your message..."
+  value={newMsg}
+  onChange={(e) => setNewMsg(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(newMsg);
+      setNewMsg("");
+    }
+  }}
           rows={1}
           style={{
             flex: 1,
