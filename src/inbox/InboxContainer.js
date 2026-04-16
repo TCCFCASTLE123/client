@@ -238,7 +238,10 @@ export default function InboxContainer() {
   /* =========================
      SEND MESSAGE (INSTANT UI)
      ========================= */
- const handleSend = async (text) => {
+ const handleSend = async (e) => {
+  e.preventDefault();
+
+  const text = e.target?.elements?.[0]?.value || "";
   if (!text.trim() || !selectedClient) return;
 
   const tempMessage = {
@@ -249,7 +252,7 @@ export default function InboxContainer() {
     client_id: selectedClient.id,
   };
 
-  // 🔥 THIS is the important part
+  // ✅ show instantly
   setMessages((prev) => [...prev, tempMessage]);
 
   try {
