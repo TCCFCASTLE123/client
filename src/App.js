@@ -5,6 +5,7 @@ import Inbox from "./inbox/InboxContainer";
 import ClientsPage from "./ClientsPage";
 import AdminTemplates from "./AdminTemplates";
 import TemplateFormPage from "./TemplateFormPage";
+import Dashboard from "./Dashboard";
 import {
   BrowserRouter as Router,
   Routes,
@@ -151,6 +152,7 @@ function App() {
             <Route path="/admin/templates" element={<AdminTemplates />} />
             <Route path="/admin/templates/new" element={<TemplateFormPage />} />
             <Route path="/admin/templates/:id" element={<TemplateFormPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/inbox" replace />} />
           </Routes>
         </main>
