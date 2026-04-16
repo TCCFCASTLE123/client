@@ -15,9 +15,11 @@ export default function InboxContainer() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const socketRef = useRef(null);
-const [selectedClient, setSelectedClient] = useState(null);
-const [messages, setMessages] = useState([]);
-const [loadingMessages, setLoadingMessages] = useState(false);
+
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
   /* =========================
      FETCH STATUSES + CLIENTS
      ========================= */
@@ -127,9 +129,6 @@ const [loadingMessages, setLoadingMessages] = useState(false);
       path: "/socket.io",
       transports: ["polling", "websocket"],
       auth: { token: getToken() },
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
     });
 
     socketRef.current = socket;
@@ -137,6 +136,22 @@ const [loadingMessages, setLoadingMessages] = useState(false);
     const handleMessage = (msg) => {
       if (!msg || !msg.client_id) return;
 
+      // ✅ update open conversation (no duplicates)
+      setMessages((prev) => {
+        if (!selectedClient || msg.client_id !== selectedClient.id) return prev;
+
+        const exists = prev.some(
+          (m) =>
+            (m.external_id && m.external_id === msg.external_id) ||
+            (m.created_at === msg.created_at && m.body === msg.body)
+        );
+
+        if (exists) return prev;
+
+        return [...prev, msg];
+      });
+
+      // ✅ update sidebar
       setClients((prev) => {
         const next = [...prev];
         const idx = next.findIndex((c) => c.id === msg.client_id);
@@ -146,8 +161,8 @@ const [loadingMessages, setLoadingMessages] = useState(false);
 
         const updated = {
           ...old,
-          lastMessageAt: msg.timestamp || new Date().toISOString(),
-          lastMessageText: msg.text || "",
+          lastMessageAt: msg.created_at || new Date().toISOString(),
+          lastMessageText: msg.body || msg.text || "",
           unreadCount:
             msg.direction === "inbound"
               ? (old.unreadCount || 0) + 1
@@ -164,10 +179,6 @@ const [loadingMessages, setLoadingMessages] = useState(false);
     socket.on("message", handleMessage);
     socket.on("message:new", handleMessage);
 
-    socket.on("connect_error", (err) => {
-      console.warn("Socket connect error:", err.message);
-    });
-
     return () => {
       socket.off("newMessage", handleMessage);
       socket.off("message", handleMessage);
@@ -175,9 +186,11 @@ const [loadingMessages, setLoadingMessages] = useState(false);
       socket.disconnect();
       socketRef.current = null;
     };
-  }, []);
+  }, [selectedClient]);
 
-  // Fetch messages when selecting client
+  /* =========================
+     LOAD CONVERSATION
+     ========================= */
   useEffect(() => {
     let cancelled = false;
 
@@ -190,21 +203,19 @@ const [loadingMessages, setLoadingMessages] = useState(false);
       setLoadingMessages(true);
 
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`, {
-          headers: { Authorization: "Bearer " + getToken() },
-        });
-
-        if (res.status === 401 || res.status === 403) {
-          if (!cancelled) {
-            setMessages([]);
-            setLoadingMessages(false);
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/messages/conversation/${selectedClient.id}`,
+          {
+            headers: { Authorization: "Bearer " + getToken() },
           }
-          redirectToLogin();
-          return;
-        }
+        );
 
         const data = await res.json().catch(() => null);
-        const list = Array.isArray(data) ? data : Array.isArray(data?.messages) ? data.messages : [];
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.messages)
+          ? data.messages
+          : [];
 
         if (!cancelled) {
           setMessages(list);
@@ -214,7 +225,6 @@ const [loadingMessages, setLoadingMessages] = useState(false);
         if (!cancelled) {
           setMessages([]);
           setLoadingMessages(false);
-          alert(err.message);
         }
       }
     }
@@ -224,19 +234,56 @@ const [loadingMessages, setLoadingMessages] = useState(false);
       cancelled = true;
     };
   }, [selectedClient]);
+
   /* =========================
-     RENDER UI
+     SEND MESSAGE (INSTANT UI)
      ========================= */
-return (
-  <Inbox
-    clients={clients}
-    setClients={setClients}
-    statuses={statuses}
-    selectedClient={selectedClient}
-    setSelectedClient={setSelectedClient}
-    messages={messages}
-    setMessages={setMessages}
-    loadingMessages={loadingMessages}
-  />
-);
+  const handleSend = async (text) => {
+    if (!text.trim() || !selectedClient) return;
+
+    const tempMessage = {
+      body: text,
+      user: "Cass", // 👈 change if needed
+      created_at: new Date().toISOString(),
+      direction: "outbound",
+      client_id: selectedClient.id,
+    };
+
+    // ✅ instant UI update
+    setMessages((prev) => [...prev, tempMessage]);
+
+    try {
+      await fetch(process.env.REACT_APP_API_URL + "/api/internal/send-sms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.REACT_APP_INTERNAL_KEY,
+        },
+        body: JSON.stringify({
+          phone: selectedClient.phone,
+          text,
+          sender: tempMessage.user,
+        }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* =========================
+     RENDER
+     ========================= */
+  return (
+    <Inbox
+      clients={clients}
+      setClients={setClients}
+      statuses={statuses}
+      selectedClient={selectedClient}
+      setSelectedClient={setSelectedClient}
+      messages={messages}
+      setMessages={setMessages}
+      loadingMessages={loadingMessages}
+      handleSend={handleSend}
+    />
+  );
 }
