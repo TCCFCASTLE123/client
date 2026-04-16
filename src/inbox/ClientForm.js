@@ -76,12 +76,12 @@ const handleSubmit = async (e) => {
         <h3 className="cc-modal-title">{initialData.id ? "Edit Client" : "Add Client"}</h3>
 
         {!!errMsg && <div className="cc-modal-error">{errMsg}</div>}
-
+<h4>Contact</h4>
         <div className="cc-row">
           <input className="cc-field" placeholder="Name*" value={name} onChange={(e) => setName(e.target.value)} required />
           <input className="cc-field" placeholder="Phone*" value={phone} onChange={(e) => setPhone(e.target.value)} required />
         </div>
-
+<h4>Appointment</h4>
         <div className="cc-row">
           <input className="cc-field" type="date" value={apptDate} onChange={(e) => setApptDate(e.target.value)} />
           <input className="cc-field" type="text" value={apptTime || ""} onChange={(e) => setApptTime(e.target.value)} placeholder="6:00 PM" />
@@ -113,7 +113,7 @@ const handleSubmit = async (e) => {
             <option value="ZOOM">ZOOM</option>
           </select>
         </div>
-
+<h4>Case Info</h4>
         <div className="cc-row">
           <select className="cc-field" value={caseType} onChange={(e) => setCaseType(e.target.value)} required>
             <option value="">Select Case Type</option>
@@ -132,7 +132,7 @@ const handleSubmit = async (e) => {
           </select>
           <div />
         </div>
-
+<h4>Notes</h4>
         <textarea className="cc-textarea" placeholder="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
 
         <div className="cc-btn-row">
