@@ -65,10 +65,15 @@ export default function ConversationPanel({
           )}
 
         {(Array.isArray(messages) ? messages : []).map((msg, i) => {
-          const msgDate = safeDate(msg.timestamp);
-          const isSystem = msg.sender === "system";
-          const isOutbound =
-            msg.direction === "outbound" || msg.sender === "me";
+    const user = msg.user || msg.sender;
+const text = msg.body || msg.text;
+const time = msg.created_at || msg.timestamp;
+
+const msgDate = safeDate(time);
+
+const isSystem = user === "system";
+const isOutbound =
+  msg.direction === "outbound" || user === "me";
 
           const bubbleClass = isSystem
             ? "system"
@@ -102,9 +107,9 @@ export default function ConversationPanel({
                     display: "block",
                   }}
                 />
-              ) : (
-                msg.text
-              )}
+            ) : (
+  text
+)}
 
               <div
                 style={{
