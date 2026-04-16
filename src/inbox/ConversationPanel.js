@@ -1,5 +1,5 @@
 // src/inbox/ConversationPanel.js
-import React from "react";
+import React, { useEffect } from "react";
 import { format } from "date-fns";
 
 function safeDate(ts) {
@@ -17,6 +17,11 @@ export default function ConversationPanel({
   textareaRef,
   messagesEndRef,
 }) {
+  useEffect(() => {
+  if (messagesEndRef?.current) {
+    messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+  }
+}, [messages]);
   if (!selectedClient) {
     return (
       <div
