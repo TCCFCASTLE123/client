@@ -99,10 +99,12 @@ export default function ClientsPage() {
 
     if (office) list = list.filter((c) => c.office === office);
     if (caseType) list = list.filter((c) => c.case_type === caseType);
+
     if (apptSetter)
       list = list.filter((c) =>
         (c.appt_setter || "").toLowerCase().includes(apptSetter.toLowerCase())
       );
+
     if (ic)
       list = list.filter((c) =>
         (c.ic || "").toLowerCase().includes(ic.toLowerCase())
@@ -187,39 +189,47 @@ export default function ClientsPage() {
             </thead>
 
             <tbody>
-              {filtered.map((c) => (
-                <tr
-                  key={c.id}
-                  onClick={() =>
-                    navigate("/inbox", {
-                      state: { clientId: c.id }, // 🔥 FIXED NAVIGATION
-                    })
-                  }
-                  style={row}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
-                >
-                  <td style={tdStrong}>{c.name}</td>
-                  <td style={td}>{formatPhone(c.phone)}</td>
-                  <td style={td}>{c.office}</td>
-                  <td style={td}>{c.case_type}</td>
-                  <td style={td}>
-                    <span
-                      style={{
-                        padding: "4px 8px",
-                        borderRadius: 999,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "#fff",
-                        background:
-                          statusColors[c.status_name] || statusColors.default,
-                      }}
-                    >
-                      {c.status_name || "—"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((c) => {
+                const statusObj = statuses.find(
+                  (s) => String(s.id) === String(c.status_id)
+                );
+                const statusName = statusObj?.name || "—";
+
+                return (
+                  <tr
+                    key={c.id}
+                    onClick={() =>
+                      navigate("/inbox", {
+                        state: { clientId: c.id },
+                      })
+                    }
+                    style={row}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+                  >
+                    <td style={tdStrong}>{c.name}</td>
+                    <td style={td}>{formatPhone(c.phone)}</td>
+                    <td style={td}>{c.office}</td>
+                    <td style={td}>{c.case_type}</td>
+
+                    <td style={td}>
+                      <span
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: 999,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: "#fff",
+                          background:
+                            statusColors[statusName] || statusColors.default,
+                        }}
+                      >
+                        {statusName}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
