@@ -238,37 +238,37 @@ export default function InboxContainer() {
   /* =========================
      SEND MESSAGE (INSTANT UI)
      ========================= */
-  const handleSend = async (text) => {
-    if (!text.trim() || !selectedClient) return;
+ const handleSend = async (text) => {
+  if (!text.trim() || !selectedClient) return;
 
-    const tempMessage = {
-      body: text,
-      user: "Cass", // 👈 change if needed
-      created_at: new Date().toISOString(),
-      direction: "outbound",
-      client_id: selectedClient.id,
-    };
-
-    // ✅ instant UI update
-    setMessages((prev) => [...prev, tempMessage]);
-
-    try {
-      await fetch(process.env.REACT_APP_API_URL + "/api/internal/send-sms", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.REACT_APP_INTERNAL_KEY,
-        },
-        body: JSON.stringify({
-          phone: selectedClient.phone,
-          text,
-          sender: tempMessage.user,
-        }),
-      });
-    } catch (err) {
-      console.error(err);
-    }
+  const tempMessage = {
+    body: text,
+    user: "Cass",
+    created_at: new Date().toISOString(),
+    direction: "outbound",
+    client_id: selectedClient.id,
   };
+
+  // 🔥 THIS is the important part
+  setMessages((prev) => [...prev, tempMessage]);
+
+  try {
+    await fetch(process.env.REACT_APP_API_URL + "/api/internal/send-sms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.REACT_APP_INTERNAL_KEY,
+      },
+      body: JSON.stringify({
+        phone: selectedClient.phone,
+        text,
+        sender: tempMessage.user,
+      }),
+    });
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   /* =========================
      RENDER
