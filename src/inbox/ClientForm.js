@@ -108,7 +108,7 @@ const handleSubmit = async (e) => {
           <select className="cc-field" value={office} onChange={(e) => setOffice(e.target.value)} required>
             <option value="">Select Office</option>
             <option value="PHX">PHX</option>
-            <option value="MESA">MESA</option>
+            <option value="GILBERT">GILBERT</option>
             <option value="OP">OP</option>
             <option value="ZOOM">ZOOM</option>
           </select>
