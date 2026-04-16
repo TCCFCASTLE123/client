@@ -31,7 +31,19 @@ export default function ClientsPage() {
 
   const [q, setQ] = useState("");
   const [statusId, setStatusId] = useState("");
+  const [office, setOffice] = useState("");
+  const [caseType, setCaseType] = useState("");
+  const [apptSetter, setApptSetter] = useState("");
+  const [ic, setIc] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
+
+  const statusColors = {
+    Set: "#3b82f6",
+    Showed: "#10b981",
+    "No Show": "#f59e0b",
+    "Working To Set": "#8b5cf6",
+    default: "#94a3b8",
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +97,17 @@ export default function ClientsPage() {
       list = list.filter((c) => String(c.status_id) === statusId);
     }
 
+    if (office) list = list.filter((c) => c.office === office);
+    if (caseType) list = list.filter((c) => c.case_type === caseType);
+    if (apptSetter)
+      list = list.filter((c) =>
+        (c.appt_setter || "").toLowerCase().includes(apptSetter.toLowerCase())
+      );
+    if (ic)
+      list = list.filter((c) =>
+        (c.ic || "").toLowerCase().includes(ic.toLowerCase())
+      );
+
     if (unreadOnly) {
       list = list.filter((c) => Number(c.unreadCount || 0) > 0);
     }
@@ -95,34 +118,19 @@ export default function ClientsPage() {
     );
 
     return list;
-  }, [clients, q, statusId, unreadOnly]);
+  }, [clients, q, statusId, office, caseType, apptSetter, ic, unreadOnly]);
 
   return (
-    <div
-      style={{
-        height: "calc(100vh - 110px)",
-        display: "flex",
-        flexDirection: "column",
-        padding: 20,
-        background: "#f1f5f9",
-        gap: 14,
-      }}
-    >
+    <div style={container}>
       {/* HEADER */}
       <div style={{ display: "flex", alignItems: "center" }}>
         <h2 style={{ margin: 0, fontWeight: 800 }}>Clients</h2>
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-          <button
-            onClick={() => navigate("/inbox")}
-            style={btnStyle}
-          >
+          <button onClick={() => navigate("/inbox")} style={btnStyle}>
             Back
           </button>
-          <button
-            onClick={() => window.location.reload()}
-            style={btnStyle}
-          >
+          <button onClick={() => window.location.reload()} style={btnStyle}>
             Reset
           </button>
         </div>
@@ -130,33 +138,33 @@ export default function ClientsPage() {
 
       {/* FILTER BAR */}
       <div style={filterBar}>
-        <input
-          placeholder="Search clients..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={inputStyle}
-        />
+        <input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} style={inputStyle} />
 
-        <select
-          value={statusId}
-          onChange={(e) => setStatusId(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="">All Status</option>
+        <select value={statusId} onChange={(e) => setStatusId(e.target.value)} style={inputStyle}>
+          <option value="">Status</option>
           {statuses.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
+            <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
 
-        <label style={{ fontWeight: 600 }}>
-          <input
-            type="checkbox"
-            checked={unreadOnly}
-            onChange={(e) => setUnreadOnly(e.target.checked)}
-          />{" "}
-          Unread
+        <select value={office} onChange={(e) => setOffice(e.target.value)} style={inputStyle}>
+          <option value="">Office</option>
+          <option value="PHX">PHX</option>
+          <option value="GILBERT">GILBERT</option>
+          <option value="OP">OP</option>
+        </select>
+
+        <select value={caseType} onChange={(e) => setCaseType(e.target.value)} style={inputStyle}>
+          <option value="">Case Type</option>
+          <option value="Criminal">Criminal</option>
+          <option value="Immigration">Immigration</option>
+        </select>
+
+        <input placeholder="Appt Setter" value={apptSetter} onChange={(e) => setApptSetter(e.target.value)} style={inputStyle} />
+        <input placeholder="I.C." value={ic} onChange={(e) => setIc(e.target.value)} style={inputStyle} />
+
+        <label>
+          <input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} /> Unread
         </label>
       </div>
 
@@ -174,6 +182,7 @@ export default function ClientsPage() {
                 <th style={th}>Phone</th>
                 <th style={th}>Office</th>
                 <th style={th}>Case</th>
+                <th style={th}>Status</th>
               </tr>
             </thead>
 
@@ -181,19 +190,34 @@ export default function ClientsPage() {
               {filtered.map((c) => (
                 <tr
                   key={c.id}
-                  onClick={() => navigate(`/inbox?clientId=${c.id}`)}
+                  onClick={() =>
+                    navigate("/inbox", {
+                      state: { clientId: c.id }, // 🔥 FIXED NAVIGATION
+                    })
+                  }
                   style={row}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#f8fafc")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "#fff")
-                  }
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
                 >
                   <td style={tdStrong}>{c.name}</td>
                   <td style={td}>{formatPhone(c.phone)}</td>
                   <td style={td}>{c.office}</td>
                   <td style={td}>{c.case_type}</td>
+                  <td style={td}>
+                    <span
+                      style={{
+                        padding: "4px 8px",
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "#fff",
+                        background:
+                          statusColors[c.status_name] || statusColors.default,
+                      }}
+                    >
+                      {c.status_name || "—"}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -204,7 +228,16 @@ export default function ClientsPage() {
   );
 }
 
-/* ================= STYLES ================= */
+/* STYLES */
+
+const container = {
+  height: "calc(100vh - 110px)",
+  display: "flex",
+  flexDirection: "column",
+  padding: 20,
+  background: "#f1f5f9",
+  gap: 14,
+};
 
 const filterBar = {
   background: "#fff",
@@ -212,7 +245,7 @@ const filterBar = {
   borderRadius: 14,
   display: "flex",
   gap: 10,
-  alignItems: "center",
+  flexWrap: "wrap",
   border: "1px solid #e2e8f0",
 };
 
@@ -264,7 +297,6 @@ const tdStrong = {
 
 const row = {
   cursor: "pointer",
-  transition: "background 0.15s",
 };
 
 const inputStyle = {
