@@ -77,7 +77,7 @@ function Header({ onLogout }) {
         <Link to="/clients" style={{ fontWeight: 700 }}>
           Clients
         </Link>
-
+<Link to="/dashboard">Dashboard</Link>
         <Link
           to="/admin/templates"
           style={{ fontWeight: 700, color: "#2774e6" }}
