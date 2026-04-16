@@ -136,17 +136,21 @@ const isOutbound =
       </div>
 
       {/* INPUT BAR */}
-      <form
-        onSubmit={handleSend}
-        style={{
-          display: "flex",
-          gap: 8,
-          padding: 14,
-          marginTop: 10,
-          background: "#fff",
-          borderTop: "1px solid #e5e7eb",
-        }}
-      >
+<form
+  onSubmit={(e) => {
+    e.preventDefault();
+    handleSend(newMsg);
+    setNewMsg("");
+  }}
+  style={{
+    display: "flex",
+    gap: 8,
+    padding: 14,
+    marginTop: 10,
+    background: "#fff",
+    borderTop: "1px solid #e5e7eb",
+  }}
+>
         <textarea
           ref={textareaRef}
           placeholder="Type your message..."
@@ -155,7 +159,8 @@ const isOutbound =
 onKeyDown={(e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    handleSend(e);
+    handleSend(newMsg);
+setNewMsg("");
   }
 }}
           rows={1}
