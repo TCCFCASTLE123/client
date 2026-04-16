@@ -137,11 +137,7 @@ const isOutbound =
 
       {/* INPUT BAR */}
 <form
-  onSubmit={(e) => {
-    e.preventDefault();
-    handleSend(newMsg);
-    setNewMsg("");
-  }}
+  onSubmit={handleSend}
   style={{
     display: "flex",
     gap: 8,
@@ -159,22 +155,21 @@ const isOutbound =
   onKeyDown={(e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(newMsg);
-      setNewMsg("");
+      handleSend(e); // 👈 back to original working flow
     }
   }}
-          rows={1}
-          style={{
-            flex: 1,
-            padding: 13,
-            borderRadius: 19,
-            border: "1px solid #bfc8da",
-            fontSize: 15,
-            resize: "none",
-            overflowY: "auto",
-            maxHeight: 180,
-          }}
-        />
+  rows={1}
+  style={{
+    flex: 1,
+    padding: 13,
+    borderRadius: 19,
+    border: "1px solid #bfc8da",
+    fontSize: 15,
+    resize: "none",
+    overflowY: "auto",
+    maxHeight: 180,
+  }}
+/>
 
         <button
           type="submit"
