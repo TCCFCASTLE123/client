@@ -139,8 +139,7 @@ const isOutbound =
 <form
   onSubmit={(e) => {
     e.preventDefault();
-    handleSend(newMsg);
-    setNewMsg("");
+    handleSend(e); // 👈 back to event-based
   }}
   style={{
     display: "flex",
@@ -159,9 +158,7 @@ const isOutbound =
 onKeyDown={(e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    handleSend(newMsg);
-setNewMsg("");
-  }
+handleSend(e);
 }}
           rows={1}
           style={{
