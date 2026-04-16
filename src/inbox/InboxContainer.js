@@ -137,7 +137,7 @@ export default function InboxContainer() {
       if (!msg || !msg.client_id) return;
 
       // ✅ update open conversation (no duplicates)
- setMessages((prev) => {
+setMessages((prev) => {
   if (
     !selectedClient ||
     String(msg.client_id) !== String(selectedClient.id)
@@ -145,7 +145,6 @@ export default function InboxContainer() {
     return prev;
   }
 
-  // ✅ prevent duplicates
   const exists = prev.some(
     (m) =>
       (m.external_id && m.external_id === msg.external_id) ||
@@ -155,20 +154,8 @@ export default function InboxContainer() {
 
   if (exists) return prev;
 
-  // ✅ ADD MESSAGE
   return [...prev, msg];
 });
-
-        const exists = prev.some(
-          (m) =>
-            (m.external_id && m.external_id === msg.external_id) ||
-            (m.created_at === msg.created_at && m.body === msg.body)
-        );
-
-        if (exists) return prev;
-
-        return [...prev, msg];
-      });
 
       // ✅ update sidebar
       setClients((prev) => {
