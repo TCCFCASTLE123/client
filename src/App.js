@@ -18,7 +18,7 @@ import {
 
 function NormalizePath() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const fixedPathname = location.pathname.replace(/\/{2,}/g, "/");
