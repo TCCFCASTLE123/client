@@ -134,7 +134,9 @@ export default function InboxContainer() {
     socketRef.current = socket;
 
     const handleMessage = (msg) => {
-      if (!msg || !msg.client_id) return;
+  console.log("SOCKET RECEIVED:", msg); // 👈 ADD THIS
+
+  if (!msg || !msg.client_id) return;
 
       // ✅ update open conversation (no duplicates)
 setMessages((prev) => {
