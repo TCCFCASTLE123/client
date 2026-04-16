@@ -250,7 +250,14 @@ const handleSend = async (text) => {
   };
 
   // ✅ instant UI
-  setMessages((prev) => [...prev, tempMessage]);
+setMessages((prev) => {
+  const updated = [...prev, tempMessage];
+  return updated;
+}); 
+  // 🔥 force React to re-render immediately
+setTimeout(() => {
+  setMessages((prev) => [...prev]);
+}, 0);
 
   try {
     await fetch(process.env.REACT_APP_API_URL + "/api/internal/send-sms", {
