@@ -70,6 +70,10 @@ function Header({ onLogout }) {
           fontSize: isMobile ? 14 : 16,
         }}
       >
+        <Link to="/dashboard" style={{ fontWeight: 700 }}>
+          Dashboard
+        </Link>
+       
         <Link to="/inbox" style={{ fontWeight: 700 }}>
           Inbox
         </Link>
@@ -77,7 +81,7 @@ function Header({ onLogout }) {
         <Link to="/clients" style={{ fontWeight: 700 }}>
           Clients
         </Link>
-<Link to="/dashboard">Dashboard</Link>
+
         <Link
           to="/admin/templates"
           style={{ fontWeight: 700, color: "#2774e6" }}
