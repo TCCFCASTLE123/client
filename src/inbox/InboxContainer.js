@@ -147,16 +147,25 @@ setMessages((prev) => {
     return prev;
   }
 
+  // ✅ normalize incoming message FIRST
+  const normalized = {
+    ...msg,
+    body: msg.body || msg.text,
+    created_at: msg.created_at || msg.timestamp,
+    user: msg.user || msg.sender,
+  };
+
+  // ✅ prevent duplicates
   const exists = prev.some(
     (m) =>
-      (m.external_id && m.external_id === msg.external_id) ||
-      (m.created_at === msg.created_at &&
-        (m.body === msg.body || m.text === msg.text))
+      (m.external_id && m.external_id === normalized.external_id) ||
+      (m.created_at === normalized.created_at &&
+        m.body === normalized.body)
   );
 
   if (exists) return prev;
 
-  return [...prev, msg];
+  return [...prev, normalized];
 });
 
       // ✅ update sidebar
