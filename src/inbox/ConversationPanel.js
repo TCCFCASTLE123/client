@@ -119,8 +119,8 @@ const isOutbound =
     textAlign: isOutbound ? "right" : "left",
   }}
 >
-  {`${format(msgDate, "MMM d")} - ${format(msgDate, "h:mm a")} - ${
-    user === "system" ? "System" : isOutbound ? "You" : user
+   {`${format(msgDate, "MMM d")} - ${format(msgDate, "h:mm a")} - ${
+    user || "Unknown"
   }`}
 </div>
             </div>
