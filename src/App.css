@@ -234,7 +234,97 @@ main {
 .message-input-row button:hover {
   opacity: 0.9;
 }
+/* === CLIENT FORM (MATCH INBOX STYLE) === */
 
+.client-modal {
+  width: 100%;
+  max-width: 720px;
+  background: #f8fafc; /* match inbox container */
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(48,81,228,0.08);
+}
+
+/* Title */
+.cc-modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+/* Grid rows */
+.cc-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Inputs */
+.cc-field {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  background: white;
+}
+
+/* Focus matches your message input */
+.cc-field:focus {
+  border-color: #3051e4;
+  box-shadow: 0 0 0 3px rgba(48,81,228,0.15);
+  outline: none;
+}
+
+/* Textarea */
+.cc-textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+/* Buttons match inbox send button */
+.cc-btn-primary {
+  background: #3051e4;
+  color: white;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.cc-btn-primary:hover {
+  opacity: 0.9;
+}
+
+.cc-btn-ghost {
+  background: #e2e8f0;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+/* Button row */
+.cc-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* Error */
+.cc-modal-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
 /* ===============================
    Status Pills
    =============================== */
