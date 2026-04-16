@@ -111,16 +111,18 @@ const isOutbound =
   text
 )}
 
-              <div
-                style={{
-                  marginTop: 6,
-                  fontSize: 11,
-                  opacity: 0.7,
-                  textAlign: isOutbound ? "right" : "left",
-                }}
-              >
-                {format(msgDate, "h:mm a")}
-              </div>
+    <div
+  style={{
+    marginTop: 6,
+    fontSize: 11,
+    opacity: 0.7,
+    textAlign: isOutbound ? "right" : "left",
+  }}
+>
+  {`${format(msgDate, "MMM d")} - ${format(msgDate, "h:mm a")} - ${
+    user === "system" ? "System" : isOutbound ? "You" : user
+  }`}
+</div>
             </div>
           );
         })}
