@@ -137,8 +137,27 @@ export default function InboxContainer() {
       if (!msg || !msg.client_id) return;
 
       // ✅ update open conversation (no duplicates)
-      setMessages((prev) => {
-        if (!selectedClient || msg.client_id !== selectedClient.id) return prev;
+ setMessages((prev) => {
+  if (
+    !selectedClient ||
+    String(msg.client_id) !== String(selectedClient.id)
+  ) {
+    return prev;
+  }
+
+  // ✅ prevent duplicates
+  const exists = prev.some(
+    (m) =>
+      (m.external_id && m.external_id === msg.external_id) ||
+      (m.created_at === msg.created_at &&
+        (m.body === msg.body || m.text === msg.text))
+  );
+
+  if (exists) return prev;
+
+  // ✅ ADD MESSAGE
+  return [...prev, msg];
+});
 
         const exists = prev.some(
           (m) =>
