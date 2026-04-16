@@ -152,6 +152,12 @@ const isOutbound =
           placeholder="Type your message..."
           value={newMsg}
           onChange={(e) => setNewMsg(e.target.value)}
+onKeyDown={(e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleSend(e);
+  }
+}}
           rows={1}
           style={{
             flex: 1,
