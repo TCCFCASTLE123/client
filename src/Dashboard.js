@@ -147,14 +147,13 @@ export default function Dashboard() {
     return result;
   }, [clients, statuses, viewMode, currentUserCode]);
 
-  const unreadMessages = messages
-    .filter((m) => m.direction === "inbound")
-    .slice(0, 5);
-
-  if (loading) {
-    return <div style={{ padding: 20 }}>Loading dashboard...</div>;
-  }
-
+const unreadMessages = messages
+  .filter((m) => {
+    const dir = (m.direction || "").toLowerCase();
+    return dir === "inbound" || dir === "incoming";
+  })
+  .slice(0, 5);
+console.log("MESSAGES:", messages);
   return (
     <div style={{ padding: 20 }}>
       {/* HEADER */}
