@@ -5,22 +5,18 @@ function getToken() {
   return localStorage.getItem("token") || "";
 }
 
-export default function Dashboard() {
-  const [clients, setClients] = useState([]);
-  const [statuses, setStatuses] = useState([]);
-  const [loading, setLoading] = useState(true);
-// Aliases → staff code (helps match sheet values like "Gabe", "Gabriel Cano", etc.)
+// 🔴 SAME AS BACKEND
 const STAFF_ALIASES = {
   aac: "aac",
   anahi: "aac",
   "anahi ayala": "aac",
-   
+
   afl: "afl",
   angel: "afl",
   "angel lucero": "afl",
 
   bgl: "bgl",
-  brianna: "bgl;",
+  brianna: "bgl",
   "brianna lopez": "bgl",
 
   bag: "bag",
@@ -39,7 +35,7 @@ const STAFF_ALIASES = {
   dt: "dt",
   dean: "dt",
   "dean turnbow": "dt",
-  
+
   ild: "ild",
   itzayani: "ild",
   "itzayani luque": "ild",
@@ -65,35 +61,45 @@ const STAFF_ALIASES = {
   "rebeca perez": "rp",
 };
 
-  const [viewMode, setViewMode] = useState("all"); // ✅ FIXED
-const username = (localStorage.getItem("username") || "").toLowerCase().trim();
+export default function Dashboard() {
+  const [clients, setClients] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState("all");
 
-const currentUserCode =
-  STAFF_ALIASES[username] ||
-  Object.keys(STAFF_ALIASES).find((key) =>
-    username.includes(key)
-  );
+  const username = (localStorage.getItem("username") || "")
+    .toLowerCase()
+    .trim();
 
-console.log("USERNAME:", username);
-console.log("USER CODE:", currentUserCode);
+  const currentUserCode =
+    STAFF_ALIASES[username] ||
+    Object.keys(STAFF_ALIASES).find((key) =>
+      username.includes(key)
+    );
 
   useEffect(() => {
     async function load() {
       try {
-        const [sRes, cRes] = await Promise.all([
+        const [sRes, cRes, mRes] = await Promise.all([
           fetch(process.env.REACT_APP_API_URL + "/api/statuses", {
             headers: { Authorization: "Bearer " + getToken() },
           }),
           fetch(process.env.REACT_APP_API_URL + "/api/clients", {
             headers: { Authorization: "Bearer " + getToken() },
           }),
+          fetch(process.env.REACT_APP_API_URL + "/api/messages", {
+            headers: { Authorization: "Bearer " + getToken() },
+          }),
         ]);
 
         const sJson = await sRes.json();
         const cJson = await cRes.json();
+        const mJson = await mRes.json();
 
         setStatuses(Array.isArray(sJson) ? sJson : sJson.statuses || []);
         setClients(Array.isArray(cJson) ? cJson : cJson.clients || []);
+        setMessages(Array.isArray(mJson) ? mJson : mJson.messages || []);
         setLoading(false);
       } catch (err) {
         console.error(err);
@@ -118,7 +124,7 @@ console.log("USER CODE:", currentUserCode);
         ? clients.filter((c) => {
             const setter = (c.appt_setter || "").toLowerCase();
             const ic = (c.ic || "").toLowerCase();
-         return setter === currentUserCode || ic === currentUserCode;
+            return setter === currentUserCode || ic === currentUserCode;
           })
         : clients;
 
@@ -139,7 +145,11 @@ console.log("USER CODE:", currentUserCode);
     });
 
     return result;
-}, [clients, statuses, viewMode, currentUserCode]);
+  }, [clients, statuses, viewMode, currentUserCode]);
+
+  const unreadMessages = messages
+    .filter((m) => m.direction === "inbound")
+    .slice(0, 5);
 
   if (loading) {
     return <div style={{ padding: 20 }}>Loading dashboard...</div>;
@@ -174,6 +184,28 @@ console.log("USER CODE:", currentUserCode);
         <Card label="No Show" value={stats.noShow} color="#ef4444" />
         <Card label="Can't Help" value={stats.cantHelp} color="#ef4444" />
         <Card label="Working" value={stats.working} color="#8b5cf6" />
+      </div>
+
+      {/* UNREAD MESSAGES */}
+      <div style={{ marginTop: 30 }}>
+        <h3>Unread Messages</h3>
+
+        {unreadMessages.length === 0 ? (
+          <div style={{ color: "#64748b" }}>No new messages</div>
+        ) : (
+          unreadMessages.map((m) => (
+            <div
+              key={m.id}
+              style={{
+                padding: 10,
+                borderBottom: "1px solid #e2e8f0",
+                cursor: "pointer",
+              }}
+            >
+              <strong>{m.sender}</strong>: {m.text}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
