@@ -9,9 +9,27 @@ export default function Dashboard() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
-
+ const STAFF_MAP = {
+  aac: "anahi ayala",
+  afl: "angel lucero",
+  bgl: "brianna lopez",
+  bag: "brenda garcia",
+  cc: "chris castle",
+  clc: "cassandra castle",
+  dt: "dean turnbow",
+  ild: "itzayani luque",
+  jmp: "janny mancinas",
+  jh: "josh hall",
+  jwg: "jacob gray",
+  trd: "tyler durham",
+  rp: "rebeca perez",
+};
   const [viewMode, setViewMode] = useState("all"); // ✅ FIXED
-  const currentUser = (localStorage.getItem("username") || "").toLowerCase();
+ const username = (localStorage.getItem("username") || "").toLowerCase();
+
+const currentUserCode = Object.keys(STAFF_MAP).find(
+  (code) => STAFF_MAP[code] === username
+);
 
   useEffect(() => {
     async function load() {
@@ -54,7 +72,7 @@ export default function Dashboard() {
         ? clients.filter((c) => {
             const setter = (c.appt_setter || "").toLowerCase();
             const ic = (c.ic || "").toLowerCase();
-            return setter === currentUser || ic === currentUser;
+         return setter === currentUserCode || ic === currentUserCode;
           })
         : clients;
 
