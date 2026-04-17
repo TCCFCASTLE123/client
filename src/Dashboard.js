@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [viewMode, setViewMode] = useState("all");
+  const currentUser = localStorage.getItem("username")?.toLowerCase();
 
   useEffect(() => {
     async function load() {
@@ -39,30 +39,29 @@ export default function Dashboard() {
     load();
   }, []);
 
-  const stats = useMemo(() => {
-    const result = {
-      set: 0,
-      showed: 0,
-      noShow: 0,
-      cantHelp: 0,
-      working: 0,
-    };
+ const visibleClients =
+  viewMode === "mine"
+    ? clients.filter((c) =>
+        (c.appt_setter || "").toLowerCase() === currentUser ||
+        (c.ic || "").toLowerCase() === currentUser
+      )
+    : clients;
 
-    clients.forEach((c) => {
-      const status = statuses.find(
-        (s) => String(s.id) === String(c.status_id)
-      )?.name;
+visibleClients.forEach((c) => {
+  const status = statuses.find(
+    (s) => String(s.id) === String(c.status_id)
+  )?.name;
 
-      if (!status) return;
+  if (!status) return;
 
-      const s = status.toLowerCase();
+  const s = status.toLowerCase();
 
-      if (s.includes("set")) result.set++;
-      else if (s.includes("show")) result.showed++;
-      else if (s.includes("no")) result.noShow++;
-      else if (s.includes("help")) result.cantHelp++;
-      else if (s.includes("work")) result.working++;
-    });
+  if (s === "set") result.set++;
+  else if (s === "showed") result.showed++;
+  else if (s === "no show") result.noShow++;
+  else if (s.includes("help")) result.cantHelp++;
+  else if (s.includes("work")) result.working++;
+});
 
     return result;
   }, [clients, statuses]);
@@ -73,7 +72,24 @@ export default function Dashboard() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Dashboard</h2>
+      <div style={{ display: "flex", alignItems: "center" }}>
+  <h2 style={{ margin: 0 }}>Dashboard</h2>
+
+  <div style={{ marginLeft: "auto" }}>
+    <select
+      value={viewMode}
+      onChange={(e) => setViewMode(e.target.value)}
+      style={{
+        padding: "6px 10px",
+        borderRadius: 8,
+        border: "1px solid #cbd5e1",
+      }}
+    >
+      <option value="mine">My Clients</option>
+      <option value="all">All Clients</option>
+    </select>
+  </div>
+</div>
 
       <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
         <Card label="Set" value={stats.set} color="#3b82f6" />
