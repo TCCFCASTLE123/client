@@ -93,7 +93,7 @@ const currentUserCode = Object.keys(STAFF_MAP).find(
     });
 
     return result;
-  }, [clients, statuses, viewMode, currentUser]);
+}, [clients, statuses, viewMode, currentUserCode]);
 
   if (loading) {
     return <div style={{ padding: 20 }}>Loading dashboard...</div>;
