@@ -9,27 +9,73 @@ export default function Dashboard() {
   const [clients, setClients] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
- const STAFF_MAP = {
-  aac: "anahi ayala",
-  afl: "angel lucero",
-  bgl: "brianna lopez",
-  bag: "brenda garcia",
-  cc: "chris castle",
-  clc: "cassandra castle",
-  dt: "dean turnbow",
-  ild: "itzayani luque",
-  jmp: "janny mancinas",
-  jh: "josh hall",
-  jwg: "jacob gray",
-  trd: "tyler durham",
-  rp: "rebeca perez",
-};
-  const [viewMode, setViewMode] = useState("all"); // ✅ FIXED
- const username = (localStorage.getItem("username") || "").toLowerCase();
+// Aliases → staff code (helps match sheet values like "Gabe", "Gabriel Cano", etc.)
+const STAFF_ALIASES = {
+  aac: "aac",
+  anahi: "aac",
+  "anahi ayala": "aac",
+   
+  afl: "afl",
+  angel: "afl",
+  "angel lucero": "afl",
 
-const currentUserCode = Object.keys(STAFF_MAP).find(
-  (code) => STAFF_MAP[code] === username
-);
+  bgl: "bgl",
+  brianna: "bgl;",
+  "brianna lopez": "bgl",
+
+  bag: "bag",
+  brenda: "bag",
+  "brenda garcia": "bag",
+
+  cc: "cc",
+  chris: "cc",
+  "chris castle": "cc",
+
+  clc: "clc",
+  cass: "clc",
+  cassandra: "clc",
+  "cassandra castle": "clc",
+
+  dt: "dt",
+  dean: "dt",
+  "dean turnbow": "dt",
+  
+  ild: "ild",
+  itzayani: "ild",
+  "itzayani luque": "ild",
+
+  jmp: "jmp",
+  janny: "jmp",
+  "janny mancinas": "jmp",
+
+  jh: "jh",
+  josh: "jh",
+  "josh hall": "jh",
+
+  jwg: "jwg",
+  jacob: "jwg",
+  "jacob gray": "jwg",
+
+  trd: "trd",
+  tyler: "trd",
+  "tyler durham": "trd",
+
+  rp: "rp",
+  rebeca: "rp",
+  "rebeca perez": "rp",
+};
+
+  const [viewMode, setViewMode] = useState("all"); // ✅ FIXED
+const username = (localStorage.getItem("username") || "").toLowerCase().trim();
+
+const currentUserCode =
+  STAFF_ALIASES[username] ||
+  Object.keys(STAFF_ALIASES).find((key) =>
+    username.includes(key)
+  );
+
+console.log("USERNAME:", username);
+console.log("USER CODE:", currentUserCode);
 
   useEffect(() => {
     async function load() {
