@@ -10,7 +10,8 @@ export default function Dashboard() {
   const [statuses, setStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const currentUser = localStorage.getItem("username")?.toLowerCase();
+  const [viewMode, setViewMode] = useState("all"); // ✅ FIXED
+  const currentUser = (localStorage.getItem("username") || "").toLowerCase();
 
   useEffect(() => {
     async function load() {
@@ -39,32 +40,42 @@ export default function Dashboard() {
     load();
   }, []);
 
- const visibleClients =
-  viewMode === "mine"
-    ? clients.filter((c) =>
-        (c.appt_setter || "").toLowerCase() === currentUser ||
-        (c.ic || "").toLowerCase() === currentUser
-      )
-    : clients;
+  const stats = useMemo(() => {
+    const result = {
+      set: 0,
+      showed: 0,
+      noShow: 0,
+      cantHelp: 0,
+      working: 0,
+    };
 
-visibleClients.forEach((c) => {
-  const status = statuses.find(
-    (s) => String(s.id) === String(c.status_id)
-  )?.name;
+    const visibleClients =
+      viewMode === "mine"
+        ? clients.filter((c) => {
+            const setter = (c.appt_setter || "").toLowerCase();
+            const ic = (c.ic || "").toLowerCase();
+            return setter === currentUser || ic === currentUser;
+          })
+        : clients;
 
-  if (!status) return;
+    visibleClients.forEach((c) => {
+      const status = statuses.find(
+        (s) => String(s.id) === String(c.status_id)
+      )?.name;
 
-  const s = status.toLowerCase();
+      if (!status) return;
 
-  if (s === "set") result.set++;
-  else if (s === "showed") result.showed++;
-  else if (s === "no show") result.noShow++;
-  else if (s.includes("help")) result.cantHelp++;
-  else if (s.includes("work")) result.working++;
-});
+      const s = status.toLowerCase();
+
+      if (s === "set") result.set++;
+      else if (s === "showed") result.showed++;
+      else if (s === "no show") result.noShow++;
+      else if (s.includes("help")) result.cantHelp++;
+      else if (s.includes("work")) result.working++;
+    });
 
     return result;
-  }, [clients, statuses]);
+  }, [clients, statuses, viewMode, currentUser]);
 
   if (loading) {
     return <div style={{ padding: 20 }}>Loading dashboard...</div>;
@@ -72,25 +83,27 @@ visibleClients.forEach((c) => {
 
   return (
     <div style={{ padding: 20 }}>
+      {/* HEADER */}
       <div style={{ display: "flex", alignItems: "center" }}>
-  <h2 style={{ margin: 0 }}>Dashboard</h2>
+        <h2 style={{ margin: 0 }}>Dashboard</h2>
 
-  <div style={{ marginLeft: "auto" }}>
-    <select
-      value={viewMode}
-      onChange={(e) => setViewMode(e.target.value)}
-      style={{
-        padding: "6px 10px",
-        borderRadius: 8,
-        border: "1px solid #cbd5e1",
-      }}
-    >
-      <option value="mine">My Clients</option>
-      <option value="all">All Clients</option>
-    </select>
-  </div>
-</div>
+        <div style={{ marginLeft: "auto" }}>
+          <select
+            value={viewMode}
+            onChange={(e) => setViewMode(e.target.value)}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: "1px solid #cbd5e1",
+            }}
+          >
+            <option value="mine">My Clients</option>
+            <option value="all">All Clients</option>
+          </select>
+        </div>
+      </div>
 
+      {/* STATS */}
       <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
         <Card label="Set" value={stats.set} color="#3b82f6" />
         <Card label="Showed" value={stats.showed} color="#10b981" />
